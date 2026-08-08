@@ -31,7 +31,8 @@ export const soilApi = {
       }
 
       // Call our AI Backend for Soil Prediction
-      const aiResponse = await fetch('/api/predict-soil', {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const aiResponse = await fetch(`${API_BASE_URL}/api/predict-soil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

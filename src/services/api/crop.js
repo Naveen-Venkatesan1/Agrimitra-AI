@@ -4,7 +4,8 @@ export const cropApi = {
   // Dynamic Crop Recommendation Engine via FastAPI
   async getCropRecommendations({ N = 50, P = 50, K = 50, temp = 28, humidity = 60, ph = 6.5, rainfall = 100 }) {
     try {
-      const response = await fetch('/api/predict-crop', {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/predict-crop`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -46,7 +47,8 @@ export const cropApi = {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch('/api/predict-disease', {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/predict-disease`, {
         method: 'POST',
         headers: {
           'X-Analysis-ID': analysisId
@@ -159,7 +161,8 @@ export const cropApi = {
     }
 
     try {
-      const response = await fetch('/api/government-schemes', {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/government-schemes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

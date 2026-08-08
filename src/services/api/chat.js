@@ -14,7 +14,8 @@ export const chatApi = {
 
       // First try calling FastAPI ML Chatbot Context API
       try {
-        const mlRes = await fetch('/api/chatbot-context', {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const mlRes = await fetch(`${API_BASE_URL}/api/chatbot-context`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
