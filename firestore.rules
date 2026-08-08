@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profiles collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Crop history and recommendations
+    match /crop_history/{documentId} {
+      allow read, write: if isAuthenticated() && request.resource.data.createdBy == request.auth.uid;
+    }
+    match /crop_recommendations/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Soil reports
+    match /soil_reports/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Weather and market cache (public read for logged in users)
+    match /weather_cache/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /market_prices/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Disease history
+    match /disease_history/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // AI Chat history
+    match /ai_chat_history/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Notifications
+    match /notifications/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Marketplace and orders
+    match /marketplace/{documentId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    match /orders/{documentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Default fallback rule
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

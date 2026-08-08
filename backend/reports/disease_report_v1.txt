@@ -1,0 +1,6 @@
+Disease Detection Model Evaluation Report (v1 - MobileNetV2)
+============================================================
+
+Classes Count: 38
+Validation Accuracy: 93.50%
+Validation Loss: 0.2029

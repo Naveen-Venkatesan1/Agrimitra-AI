@@ -1,0 +1,25 @@
+Soil Health Model Evaluation Report (v2)
+============================================================
+Dataset Name: ICAR Soil N-P-K Fertility Matrix
+Source: Soil Health Card ICAR Scheme
+Number of Samples: 100
+Number of Classes: 2
+Accuracy:  0.7500
+Precision: 0.7525
+Recall:    0.7500
+F1 Score:  0.7494
+Training Time: 0.1 seconds
+
+Classification Report:
+              precision    recall  f1-score   support
+
+     Fertile       0.78      0.70      0.74        10
+ Non Fertile       0.73      0.80      0.76        10
+
+    accuracy                           0.75        20
+   macro avg       0.75      0.75      0.75        20
+weighted avg       0.75      0.75      0.75        20
+
+Confusion Matrix:
+[[7 3]
+ [2 8]]

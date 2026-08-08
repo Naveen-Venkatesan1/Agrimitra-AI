@@ -1,0 +1,8 @@
+Crop Yield Model Evaluation Report (v2)
+============================================================
+Dataset Name: FAO Agricultural Crop Yield Dataset
+Source: FAO / World Bank Agriculture Statistics
+Number of Samples: 28242
+R2 Score: 0.9714
+RMSE:     14412.9118
+Training Time: 20.81 seconds
