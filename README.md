@@ -36,10 +36,6 @@ Agrimitra AI uses secure serverless API proxies to protect sensitive keys from t
 
 Create a `.env.local` file in the root directory and copy the format from `.env.example`.
 
-**Required Vercel Serverless Backend Keys:**
-- `GEMINI_API_KEY`: Your Google AI Studio Gemini 1.5 Flash Key.
-- `TELEMETRY_API_KEY`: AgroMonitoring API Key.
-- `DATAGOV_API_KEY`: Data.gov.in API Key.
 
 **Required Public Frontend Configuration:**
 - `VITE_FIREBASE_API_KEY`
