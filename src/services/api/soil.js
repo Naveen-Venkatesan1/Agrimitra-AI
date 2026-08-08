@@ -31,7 +31,7 @@ export const soilApi = {
       }
 
       // Call our AI Backend for Soil Prediction
-      const aiResponse = await fetch('http://localhost:8000/predict-soil', {
+      const aiResponse = await fetch('/api/predict-soil', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

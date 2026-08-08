@@ -165,8 +165,8 @@ class CropInput(BaseModel):
     pH: float
     Rainfall: float
 
-@app.post("/predict-crop")
-@app.post("/recommend-crop")
+@app.post("/api/predict-crop")
+@app.post("/api/recommend-crop")
 async def recommend_crop(data: CropInput):
     if crop_model is None or crop_encoder is None:
         raise HTTPException(status_code=503, detail="Crop recommendation model is currently unavailable.")
@@ -211,7 +211,7 @@ class HealthScoreInput(BaseModel):
     confidence: float
     severity: Optional[str] = "High"
 
-@app.post("/calculate-health-score")
+@app.post("/api/calculate-health-score")
 async def calculate_health_score(data: HealthScoreInput):
     score, rating = compute_plant_health_score(data.disease_name, data.confidence, data.severity)
     return {
@@ -220,7 +220,7 @@ async def calculate_health_score(data: HealthScoreInput):
         "is_healthy": "healthy" in data.disease_name.lower()
     }
 
-@app.post("/predict-disease")
+@app.post("/api/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     # Check model loading status
     if disease_model is None or not disease_classes:
@@ -369,7 +369,7 @@ class ChatbotContextInput(BaseModel):
     district: Optional[str] = None
     crop: Optional[str] = None
 
-@app.post("/chatbot-context")
+@app.post("/api/chatbot-context")
 async def chatbot_context(data: ChatbotContextInput):
     q = data.query.lower()
     diag = data.latest_diagnosis or {}
@@ -461,7 +461,7 @@ class SchemeInput(BaseModel):
     SchemeType: Optional[str] = ""
     SearchQuery: Optional[str] = ""
 
-@app.post("/government-schemes")
+@app.post("/api/government-schemes")
 async def get_schemes(data: SchemeInput):
     if not os.path.exists(DB_PATH):
         raise HTTPException(status_code=503, detail="Database not found")
@@ -543,7 +543,7 @@ class SoilInput(BaseModel):
     P: float
     K: float
 
-@app.post('/predict-soil')
+@app.post('/api/predict-soil')
 async def predict_soil(data: SoilInput):
     if soil_model is None or soil_encoder is None:
         raise HTTPException(status_code=503, detail='Soil model not loaded.')
@@ -579,7 +579,7 @@ class YieldInput(BaseModel):
     pesticides_tonnes: float
     avg_temp: float
 
-@app.post('/predict-yield')
+@app.post('/api/predict-yield')
 async def predict_yield(data: YieldInput):
     if yield_model is None or yield_encoder is None:
         raise HTTPException(status_code=503, detail='Yield model not loaded.')
@@ -612,7 +612,7 @@ class FertilizerInput(BaseModel):
     Potassium: float
     Phosphorous: float
 
-@app.post('/predict-fertilizer')
+@app.post('/api/predict-fertilizer')
 async def predict_fertilizer(data: FertilizerInput):
     if fertilizer_model is None or fertilizer_encoder is None:
         raise HTTPException(status_code=503, detail='Fertilizer model not loaded.')
