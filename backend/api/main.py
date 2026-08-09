@@ -37,7 +37,7 @@ DB_DIR = os.path.join(BASE_DIR, "..", "database")
 # Paths
 CROP_MODEL_PATH = os.path.join(MODELS_DIR, "crop_model_v1.pkl")
 CROP_ENCODER_PATH = os.path.join(MODELS_DIR, "crop_label_encoder_v1.pkl")
-DISEASE_MODEL_PATH = os.path.join(MODELS_DIR, "disease_model_v1.keras")
+DISEASE_MODEL_PATH = os.path.join(MODELS_DIR, "disease_model_v1.h5")
 DISEASE_CLASSES_PATH = os.path.join(MODELS_DIR, "disease_classes.txt")
 DISEASE_CONFIG_PATH = os.path.join(MODELS_DIR, "model_config.json")
 DISEASE_KB_PATH = os.path.join(UTILS_DIR, "disease_kb.json")
