@@ -123,7 +123,7 @@ async def load_resources():
                 pest_classes = [line.strip() for line in f.readlines() if line.strip()]
                 
     except Exception as e:
-        logging.error(f"Error loading backend resources: {e}")
+        logging.exception("Error loading backend resources:")
 
 def compute_plant_health_score(disease_name: str, confidence: float, severity: str):
     """
