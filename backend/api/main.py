@@ -73,8 +73,30 @@ async def load_resources():
     global crop_model, crop_encoder, disease_model, disease_classes, disease_config, disease_kb
     global soil_model, soil_encoder, yield_model, yield_encoder
     global fertilizer_model, fertilizer_encoder, pest_model, pest_classes
-    
     try:
+        # --- FIX FOR RAILWAY NIXPACKS GIT LFS POINTERS ---
+        def ensure_lfs_model(filepath: str):
+            if os.path.exists(filepath) and os.path.getsize(filepath) < 500:
+                import urllib.request
+                filename = os.path.basename(filepath)
+                # Ignore .txt and .json which are naturally small text files, only fetch binary models
+                if not filename.endswith(('.txt', '.json')):
+                    url = f"https://github.com/Naveen-Venkatesan1/Agrimitra-AI/raw/main/backend/models/{filename}"
+                    logging.info(f"[LFS AUTO-FETCH] Detected pointer for {filename}. Downloading real model...")
+                    try:
+                        urllib.request.urlretrieve(url, filepath)
+                        logging.info(f"[LFS AUTO-FETCH] Successfully downloaded {filename}")
+                    except Exception as e:
+                        logging.error(f"[LFS AUTO-FETCH] Failed to download {filename}: {e}")
+
+        for model_path in [
+            CROP_MODEL_PATH, CROP_ENCODER_PATH, DISEASE_MODEL_PATH,
+            SOIL_MODEL_PATH, SOIL_ENCODER_PATH, YIELD_MODEL_PATH, YIELD_ENCODER_PATH,
+            FERTILIZER_MODEL_PATH, FERTILIZER_ENCODER_PATH, PEST_MODEL_PATH
+        ]:
+            ensure_lfs_model(model_path)
+        # -------------------------------------------------
+
         if os.path.exists(CROP_MODEL_PATH) and os.path.exists(CROP_ENCODER_PATH):
             crop_model = joblib.load(CROP_MODEL_PATH)
             crop_encoder = joblib.load(CROP_ENCODER_PATH)
