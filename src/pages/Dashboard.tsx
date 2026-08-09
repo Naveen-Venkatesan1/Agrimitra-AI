@@ -62,16 +62,17 @@ export const Dashboard: React.FC = () => {
   let cropHealthColor = "text-emerald-500";
   
   if (latestDiagnosis && latestDiagnosis.healthScore) {
-    cropHealthScore = latestDiagnosis.healthScore;
-    cropHealthStatus = latestDiagnosis.healthRating || "Good";
-    if (cropHealthStatus.toLowerCase() === 'poor' || cropHealthStatus.toLowerCase() === 'high risk') {
+    cropHealthScore = String(latestDiagnosis.healthScore);
+    cropHealthStatus = String(latestDiagnosis.healthRating || "Good");
+    const statusLower = cropHealthStatus.toLowerCase();
+    if (statusLower === 'poor' || statusLower === 'high risk' || statusLower === 'high') {
       cropHealthColor = "text-red-500";
-    } else if (cropHealthStatus.toLowerCase() === 'moderate') {
+    } else if (statusLower === 'moderate') {
       cropHealthColor = "text-amber-500";
     }
   } else if (weather?.suitabilityScore) {
     cropHealthScore = `${weather.suitabilityScore}%`;
-    cropHealthStatus = weather.suitabilityCategory || "Good";
+    cropHealthStatus = String(weather.suitabilityCategory || "Good");
     if (weather.suitabilityScore < 50) cropHealthColor = "text-red-500";
     else if (weather.suitabilityScore < 75) cropHealthColor = "text-amber-500";
   }
@@ -83,8 +84,8 @@ export const Dashboard: React.FC = () => {
   let waterStressChartColor = "#10B981"; // emerald
 
   const moisture = irrigation?.soilMoisture || 60;
-  const highTemp = weather?.temp > 35;
-  const isRainy = weather?.rainProbabilityTomorrow > 60;
+  const highTemp = Boolean(weather?.temp && weather.temp > 35);
+  const isRainy = Boolean(weather?.rainProbabilityTomorrow && weather.rainProbabilityTomorrow > 60);
   
   let stressVal = Math.max(0, 100 - moisture);
   if (highTemp && !isRainy) stressVal += 15;
@@ -108,9 +109,9 @@ export const Dashboard: React.FC = () => {
   let pestRiskStatus = "No immediate risk";
   let pestRiskColor = "text-gray-400";
 
-  const hasDiseaseAlert = alerts?.some((a: any) => a.category === 'disease' && a.unread);
-  const highHumidity = weather?.humidity > 80;
-  const warmTemp = weather?.temp > 25 && weather?.temp < 35;
+  const hasDiseaseAlert = Array.isArray(alerts) && alerts.some((a: any) => a && a.category === 'disease' && a.unread);
+  const highHumidity = Boolean(weather?.humidity && weather.humidity > 80);
+  const warmTemp = Boolean(weather?.temp && weather.temp > 25 && weather.temp < 35);
   
   if (hasDiseaseAlert) {
     pestRiskValue = "High";
@@ -127,20 +128,25 @@ export const Dashboard: React.FC = () => {
   }
 
   // Helper for dynamic SVG paths
-  const generateSparkline = (valuePercentage: string, isInverse = false) => {
-    const num = parseInt(valuePercentage.replace('%', '')) || 50;
+  const generateSparkline = (valuePercentage: string | number, isInverse = false) => {
+    const strVal = String(valuePercentage || '50');
+    const num = parseInt(strVal.replace('%', '')) || 50;
     const normalized = isInverse ? (100 - num) : num;
     const yEnd = 20 - (normalized / 100) * 15;
     return `M0 20 L20 ${yEnd + 6} L40 ${yEnd + 2} L60 ${yEnd + 5} L80 ${yEnd + 1} L100 ${yEnd}`;
   };
 
-  const filteredAlerts = alerts?.filter((alert: any) => 
-    !alert.title.toLowerCase().includes('pest') && 
-    !alert.title.toLowerCase().includes('borer') && 
-    !alert.title.toLowerCase().includes('outbreak') && 
-    alert.category !== 'pest' && 
-    alert.category !== 'pest-lifecycle'
-  );
+  const filteredAlerts = Array.isArray(alerts) 
+    ? alerts.filter((alert: any) => {
+        if (!alert || !alert.title || typeof alert.title !== 'string') return false;
+        const tLower = alert.title.toLowerCase();
+        return !tLower.includes('pest') && 
+               !tLower.includes('borer') && 
+               !tLower.includes('outbreak') && 
+               alert.category !== 'pest' && 
+               alert.category !== 'pest-lifecycle';
+      })
+    : [];
 
   return (
     <div className="min-h-screen bg-[#FAFAF9] font-sans pb-10">
@@ -406,8 +412,8 @@ export const Dashboard: React.FC = () => {
                 <span className="text-[11px] font-bold text-[#0B4D2F] cursor-pointer" onClick={() => navigate('/alerts')}>{t('view_all', 'View All')} <ArrowRight className="w-2.5 h-2.5 inline" /></span>
               </div>
               <div className="space-y-4">
-                {filteredAlerts?.slice(0, 3).map((alert: any) => (
-                  <div key={alert.id} className="flex items-start justify-between gap-3">
+                {filteredAlerts.slice(0, 3).map((alert: any, idx: number) => (
+                  <div key={alert.id || alert.title || idx} className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2">
                       {alert.category === 'weather' ? (
                         <CloudRain className="w-4 h-4 text-sky-500 flex-shrink-0 mt-0.5" />
