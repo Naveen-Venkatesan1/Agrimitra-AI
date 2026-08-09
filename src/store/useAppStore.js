@@ -154,10 +154,10 @@ export const useAppStore = create(
 
       if (firebaseUser) {
         // Fetch profile before releasing router to guarantee onboardingCompleted is known
-        const res = await profileApi.getProfile(firebaseUser.uid);
-        const profileData = res.profile || {};
+        const res = await profileApi.getProfile(firebaseUser.uid).catch(() => ({ profile: null }));
+        const profileData = (res && res.profile) || {};
 
-        set({ isAuthenticated: true });
+        set({ isAuthenticated: true, authLoading: false });
         localStorage.setItem('agrimitra_session', 'active');
         
         const baseUser = {

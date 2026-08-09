@@ -4,6 +4,8 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
@@ -60,10 +62,31 @@ googleProvider.setCustomParameters({
 export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    return { user: result.user, error: null };
+    return { user: result.user, error: null, code: null };
   } catch (error) {
     console.error("Firebase Google Auth Error:", error);
-    return { user: null, error: error.message };
+    if (error.code === 'auth/popup-blocked') {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return { user: null, error: null, code: 'redirecting' };
+      } catch (redirectError) {
+        return { user: null, error: redirectError.message, code: redirectError.code };
+      }
+    }
+    return { user: null, error: error.message, code: error.code };
+  }
+};
+
+export const checkGoogleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      return { user: result.user, error: null };
+    }
+    return { user: null, error: null };
+  } catch (error) {
+    console.error("Firebase Redirect Auth Error:", error);
+    return { user: null, error: error.message, code: error.code };
   }
 };
 

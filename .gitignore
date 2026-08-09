@@ -42,3 +42,5 @@ backend/test_api_endpoints.py
 __pycache__/
 *.pyc
 test_lfs.pkl
+.vercel
+.env*

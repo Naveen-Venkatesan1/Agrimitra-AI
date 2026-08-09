@@ -213,6 +213,9 @@ export const CropIntelligence = () => {
     } catch (e) {
       console.warn('Failed to save uploaded image to local storage:', e);
     }
+
+    // Auto-trigger analysis immediately on image upload
+    triggerAnalysis(file);
   };
 
   const showRecButton = Boolean(

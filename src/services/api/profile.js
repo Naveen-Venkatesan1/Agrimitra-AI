@@ -7,8 +7,13 @@ export const profileApi = {
     try {
       if (uid) {
         const docRef = doc(db, 'users', uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        const getDocPromise = getDoc(docRef);
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve({ exists: () => false }), 2500)
+        );
+
+        const docSnap = await Promise.race([getDocPromise, timeoutPromise]);
+        if (docSnap && typeof docSnap.exists === 'function' && docSnap.exists()) {
           const profile = docSnap.data();
           localStorage.setItem(LOCAL_KEY, JSON.stringify(profile));
           return { success: true, profile };

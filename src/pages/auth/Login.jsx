@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Sprout,
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Logo, LogoIcon } from '../../components/ui/Logo';
 import { useAppStore } from '../../store/useAppStore';
-import { loginWithGoogle, loginWithEmail } from '../../config/firebase';
+import { loginWithGoogle, loginWithEmail, checkGoogleRedirectResult } from '../../config/firebase';
 import { useTranslation } from '../../hooks/useTranslation';
 
 /* ─────────────────────────────────────────────────────────── */
@@ -55,6 +55,35 @@ export const Login = () => {
   const [loading, setLoading]           = useState(false);
   const [authError, setAuthError]       = useState('');
 
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const { user, error } = await checkGoogleRedirectResult();
+        if (error) {
+          setAuthError(`Google Sign-In failed: ${error}`);
+        } else if (user && user.email) {
+          setLoading(true);
+          const { profileApi } = await import('../../services/api/profile');
+          const res = await profileApi.getProfile(user.uid).catch(() => ({ profile: null }));
+          const profile = (res && res.profile) || {};
+          setAuth(true, {
+            id: user.uid,
+            name: user.displayName || user.email.split('@')[0] || 'Farmer User',
+            email: user.email,
+            avatar: user.photoURL || '',
+            ...profile
+          });
+          setLoading(false);
+          const target = profile.onboardingCompleted ? '/dashboard' : '/onboarding';
+          navigate(target, { replace: true });
+        }
+      } catch (e) {
+        console.warn("Error handling Google redirect result:", e);
+      }
+    };
+    handleRedirectResult();
+  }, [setAuth, navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -72,14 +101,18 @@ export const Login = () => {
 
         if (user) {
           const { profileApi } = await import('../../services/api/profile');
-          const res = await profileApi.getProfile(user.uid);
+          const res = await profileApi.getProfile(user.uid).catch(() => ({ profile: null }));
+          const profile = (res && res.profile) || {};
           
           setAuth(true, {
             id: user.uid,
             name: user.displayName || email.split('@')[0],
             email: user.email,
-            ...res.profile
+            ...profile
           });
+          setLoading(false);
+          const target = profile.onboardingCompleted ? '/dashboard' : '/onboarding';
+          navigate(target, { replace: true });
           return;
         }
       } catch (err) {
@@ -100,15 +133,24 @@ export const Login = () => {
     setAuthError('');
 
     try {
-      const { user, error } = await loginWithGoogle();
+      const { user, error, code } = await loginWithGoogle();
       
+      if (code === 'redirecting') {
+        return;
+      }
+
       if (error) {
-        if (error.includes('unauthorized-domain') || error.includes('127.0.0.1')) {
-          setAuthError('Google Sign-In is blocked on 127.0.0.1. Please open http://localhost:5173 instead to use this feature.');
+        const errStr = (error || '').toString();
+        const errCode = code || '';
+        const isUnauthorized = errCode === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain');
+
+        if (isUnauthorized) {
+          const currentHostname = window.location.hostname;
+          setAuthError(`Google Sign-In domain unauthorized ("${currentHostname}"). Please add "${currentHostname}" to Authorized Domains in Firebase Console.`);
           setLoading(false);
           return;
-        } else if (error.includes('popup-closed-by-user')) {
-          setAuthError('Google Sign-In was cancelled.');
+        } else if (errCode === 'auth/popup-closed-by-user' || errStr.includes('popup-closed-by-user')) {
+          setAuthError('Google Sign-In popup was closed. Click Google again to retry.');
           setLoading(false);
           return;
         } else {
@@ -120,16 +162,19 @@ export const Login = () => {
 
       if (user && user.email) {
         const { profileApi } = await import('../../services/api/profile');
-        const res = await profileApi.getProfile(user.uid);
+        const res = await profileApi.getProfile(user.uid).catch(() => ({ profile: null }));
+        const profile = (res && res.profile) || {};
 
         setAuth(true, {
           id: user.uid,
           name: user.displayName || user.email.split('@')[0] || 'Farmer User',
           email: user.email,
           avatar: user.photoURL || '',
-          ...res.profile
+          ...profile
         });
-        // Router handles navigation
+        setLoading(false);
+        const target = profile.onboardingCompleted ? '/dashboard' : '/onboarding';
+        navigate(target, { replace: true });
         return;
       }
     } catch (err) {
