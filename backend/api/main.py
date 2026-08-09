@@ -231,7 +231,9 @@ async def predict_disease(file: UploadFile = File(...)):
         }
         
     start_time = time.time()
-    temp_file_path = f"temp_{int(time.time()*1000)}_{file.filename}"
+    import tempfile
+    temp_dir = tempfile.gettempdir()
+    temp_file_path = os.path.join(temp_dir, f"temp_{int(time.time()*1000)}_{file.filename}")
     
     try:
         content = await file.read()

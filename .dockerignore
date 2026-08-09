@@ -1,0 +1,11 @@
+node_modules/
+dist/
+public/
+src/
+.env
+.git
+.vscode
+__pycache__/
+*.pyc
+datasets/
+test_images/
