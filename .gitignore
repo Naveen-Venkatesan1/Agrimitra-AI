@@ -32,3 +32,9 @@ datasets/
 *.njsproj
 *.sln
 *.sw?
+datasets/
+backend/training/
+backend/scripts/download_datasets.py
+backend/scripts/prepare_and_train_v2.py
+backend/test_image_difference.py
+backend/test_api_endpoints.py
