@@ -355,7 +355,7 @@ async def predict_disease(file: UploadFile = File(...)):
     except Exception as e:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-        logging.error(f"Inference error in /predict-disease: {e}")
+        logging.exception("Inference error in /predict-disease")
         return {
             "success": False,
             "error": "Analysis failed. Please try again."
