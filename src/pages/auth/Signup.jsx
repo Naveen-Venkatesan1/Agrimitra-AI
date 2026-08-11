@@ -25,14 +25,16 @@ export const Signup = () => {
     const targetEmail = email || `${fullName.toLowerCase().replace(/\s+/g, '')}@agrimitra.ai`;
     const res = await authApi.signUp({ email: targetEmail, password, farmerName: fullName });
 
-    if (res.success) {
+    if (res.success && res.user) {
       setAuth(true, { 
-        name: fullName, 
+        ...res.user,
+        name: fullName || res.user.name, 
         email: targetEmail,
-        onboardingCompleted: false // New signups always need onboarding
+        authMode: 'direct',
+        onboardingCompleted: false
       });
       setLoading(false);
-      // Router handles navigation to /onboarding
+      navigate('/onboarding', { replace: true });
     } else {
       setErrorMsg(res.error || 'Signup failed');
       setLoading(false);

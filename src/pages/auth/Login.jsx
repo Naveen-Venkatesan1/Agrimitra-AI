@@ -18,8 +18,9 @@ import {
 } from 'lucide-react';
 import { Logo, LogoIcon } from '../../components/ui/Logo';
 import { useAppStore } from '../../store/useAppStore';
-import { loginWithGoogle, loginWithEmail, checkGoogleRedirectResult } from '../../config/firebase';
+import { loginWithGoogle, checkGoogleRedirectResult } from '../../config/firebase';
 import { useTranslation } from '../../hooks/useTranslation';
+import { authApi } from '../../services/api';
 
 /* ─────────────────────────────────────────────────────────── */
 
@@ -89,40 +90,32 @@ export const Login = () => {
     setLoading(true);
     setAuthError('');
 
-    if (activeTab === 'email' && email) {
+    if ((activeTab === 'email' && email) || (activeTab === 'mobile' && phoneNumber)) {
       try {
-        const { user, error } = await loginWithEmail(email, password);
+        const targetEmail = email || `${phoneNumber.replace(/\D/g, '')}@agrimitra.ai`;
+        const res = await authApi.login({ email: targetEmail, password });
         
-        if (error) {
-          setAuthError(`Login failed: ${error}`);
+        if (!res.success) {
+          setAuthError(res.error || 'Login failed. Please check your credentials or create an account.');
           setLoading(false);
           return;
         }
 
-        if (user) {
-          const { profileApi } = await import('../../services/api/profile');
-          const res = await profileApi.getProfile(user.uid).catch(() => ({ profile: null }));
-          const profile = (res && res.profile) || {};
-          
-          setAuth(true, {
-            id: user.uid,
-            name: user.displayName || email.split('@')[0],
-            email: user.email,
-            ...profile
-          });
+        if (res.user) {
+          setAuth(true, res.user);
           setLoading(false);
-          const target = profile.onboardingCompleted ? '/dashboard' : '/onboarding';
+          const target = res.user.onboardingCompleted ? '/dashboard' : '/onboarding';
           navigate(target, { replace: true });
           return;
         }
       } catch (err) {
-        console.warn("Firebase Auth fallback:", err);
+        console.warn("Direct Auth fallback:", err);
         setAuthError('Authentication service unavailable. Please try again later.');
         setLoading(false);
         return;
       }
-    } else if (activeTab === 'mobile') {
-      setAuthError('Mobile login is currently unavailable. Please use Email or Google Sign-In.');
+    } else {
+      setAuthError('Please enter your email or mobile number.');
       setLoading(false);
       return;
     }
@@ -631,7 +624,7 @@ export const Login = () => {
               <p className="text-center" style={{ fontSize: 13, color: '#4B5563', margin: '18px 0 0 0' }}>
                 {t('new_to_agrimitra', 'New to AGRIMITRA AI? ')}
                 <Link
-                  to="/onboarding"
+                  to="/signup"
                   style={{ color: '#1B5E33', fontWeight: 700, textDecoration: 'none' }}
                   onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}

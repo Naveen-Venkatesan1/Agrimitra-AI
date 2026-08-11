@@ -221,13 +221,13 @@ export const useAppStore = create(
     if (isAuth && userData) {
       localStorage.setItem('agrimitra_session', 'active');
       set((state) => {
-        const updatedUser = userData ? { ...state.user, ...userData } : state.user;
+        const updatedUser = userData ? { ...userData } : state.user;
         localStorage.setItem('agrimitra_user_profile', JSON.stringify(updatedUser));
         return {
           isAuthenticated: true,
           user: updatedUser,
-          selectedState: updatedUser.state || state.selectedState,
-          selectedDistrict: updatedUser.district || state.selectedDistrict,
+          selectedState: updatedUser?.state || state.selectedState,
+          selectedDistrict: updatedUser?.district || state.selectedDistrict,
           authLoading: false
         };
       });

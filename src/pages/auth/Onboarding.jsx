@@ -193,6 +193,8 @@ export const Onboarding = () => {
         latitude: formData.latitude,
         longitude: formData.longitude,
         preferredLanguage: formData.preferredLanguage,
+        authMode: user?.authMode || 'direct',
+        role: user?.role || 'farmer',
         onboardingCompleted: true
       });
 

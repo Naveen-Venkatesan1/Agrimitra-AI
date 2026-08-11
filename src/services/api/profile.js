@@ -5,7 +5,7 @@ const LOCAL_KEY = 'agrimitra_user_profile';
 export const profileApi = {
   async getProfile(uid) {
     try {
-      if (uid) {
+      if (uid && !uid.startsWith('usr_direct_') && !uid.startsWith('usr_demo_')) {
         const docRef = doc(db, 'users', uid);
         const getDocPromise = getDoc(docRef);
         const timeoutPromise = new Promise((resolve) =>
@@ -38,7 +38,7 @@ export const profileApi = {
   },
 
   subscribeToProfile(uid, callback) {
-    if (!uid) return () => {};
+    if (!uid || uid.startsWith('usr_direct_') || uid.startsWith('usr_demo_')) return () => {};
     const docRef = doc(db, 'users', uid);
     
     return onSnapshot(docRef, (docSnap) => {
@@ -69,7 +69,20 @@ export const profileApi = {
 
       localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
 
-      if (uid) {
+      // Also update in direct users store if this is a direct account
+      if (uid && (uid.startsWith('usr_direct_') || uid.startsWith('usr_demo_'))) {
+        try {
+          const DIRECT_KEY = 'agrimitra_direct_users';
+          const directUsers = JSON.parse(localStorage.getItem(DIRECT_KEY) || '[]');
+          const idx = directUsers.findIndex((u) => u.id === uid);
+          if (idx !== -1) {
+            directUsers[idx] = { ...directUsers[idx], ...updated };
+            localStorage.setItem(DIRECT_KEY, JSON.stringify(directUsers));
+          }
+        } catch (e) {
+          console.warn('Failed updating direct users store:', e);
+        }
+      } else if (uid) {
         const docRef = doc(db, 'users', uid);
         const setDocPromise = setDoc(docRef, {
           ...updated,

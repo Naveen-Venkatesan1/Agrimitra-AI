@@ -53,7 +53,7 @@ const ProtectedRoute = () => {
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, authLoading } = useAppStore();
+  const { isAuthenticated, authLoading, user } = useAppStore();
 
   if (authLoading) {
     return (
@@ -64,7 +64,11 @@ const PublicRoute = ({ children }) => {
     );
   }
 
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+  if (isAuthenticated) {
+    return <Navigate to={user?.onboardingCompleted ? "/dashboard" : "/onboarding"} replace />;
+  }
+
+  return children;
 };
 
 const OnboardingRoute = ({ children }) => {
