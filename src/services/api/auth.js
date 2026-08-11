@@ -112,6 +112,35 @@ export const authApi = {
     return result;
   },
 
+  async sendEmailSignInLink(email) {
+    const { sendEmailSignInLink: sendLink } = await import('../../config/firebase');
+    return sendLink(email);
+  },
+
+  checkIsEmailSignInLink(url) {
+    try {
+      const { checkIsEmailSignInLink: checkLink } = require('../../config/firebase');
+      return checkLink(url);
+    } catch (e) {
+      return false;
+    }
+  },
+
+  async completeEmailSignInLink(email, url) {
+    const { completeEmailSignInLink: completeLink } = await import('../../config/firebase');
+    return completeLink(email, url);
+  },
+
+  async sendPhoneOTP(phoneNumber, containerId) {
+    const { sendPhoneOTP: sendOTP } = await import('../../config/firebase');
+    return sendOTP(phoneNumber, containerId);
+  },
+
+  async verifyPhoneOTP(confirmationResult, otpCode) {
+    const { verifyPhoneOTP: verifyOTP } = await import('../../config/firebase');
+    return verifyOTP(confirmationResult, otpCode);
+  },
+
   onSessionChange(callback) {
     return onAuthStateChanged(auth, (user) => {
       callback(user);

@@ -11,7 +11,12 @@ import {
   signOut,
   sendPasswordResetEmail,
   sendEmailVerification,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -135,6 +140,87 @@ export const logoutFirebase = async () => {
   }
 };
 
+// Email Link Authentication Helpers
+export const sendEmailSignInLink = async (email) => {
+  try {
+    const actionCodeSettings = {
+      url: `${window.location.origin}/finishSignUp`,
+      handleCodeInApp: true
+    };
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    localStorage.setItem('emailForSignIn', email);
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Firebase Send Email Link Error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const checkIsEmailSignInLink = (url) => {
+  try {
+    return isSignInWithEmailLink(auth, url || window.location.href);
+  } catch (error) {
+    return false;
+  }
+};
+
+export const completeEmailSignInLink = async (email, url) => {
+  try {
+    const result = await signInWithEmailLink(auth, email, url || window.location.href);
+    localStorage.removeItem('emailForSignIn');
+    return { user: result.user, error: null };
+  } catch (error) {
+    console.error("Firebase Complete Email Link Error:", error);
+    return { user: null, error: error.message };
+  }
+};
+
+// Phone OTP Authentication Helpers
+export const setupRecaptcha = (containerId = 'recaptcha-container') => {
+  try {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: () => {}
+      });
+    }
+    return window.recaptchaVerifier;
+  } catch (error) {
+    console.error("Firebase Recaptcha Setup Error:", error);
+    return null;
+  }
+};
+
+export const sendPhoneOTP = async (phoneNumber, containerId = 'recaptcha-container') => {
+  try {
+    const appVerifier = setupRecaptcha(containerId);
+    if (!appVerifier) {
+      return { confirmationResult: null, error: "Failed to initialize Recaptcha verifier." };
+    }
+    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber.replace(/\D/g, '')}`;
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    window.confirmationResult = confirmationResult;
+    return { confirmationResult, error: null };
+  } catch (error) {
+    console.error("Firebase Send Phone OTP Error:", error);
+    return { confirmationResult: null, error: error.message };
+  }
+};
+
+export const verifyPhoneOTP = async (confirmationResult, otpCode) => {
+  try {
+    const activeConfirm = confirmationResult || window.confirmationResult;
+    if (!activeConfirm) {
+      return { user: null, error: "No active OTP request found. Please resend OTP." };
+    }
+    const result = await activeConfirm.confirm(otpCode);
+    return { user: result.user, error: null };
+  } catch (error) {
+    console.error("Firebase Verify Phone OTP Error:", error);
+    return { user: null, error: error.message };
+  }
+};
+
 // File Upload Helper for Firebase Storage
 export const uploadFileToStorage = async (file, folderPath = 'documents') => {
   try {
@@ -151,6 +237,8 @@ export const uploadFileToStorage = async (file, folderPath = 'documents') => {
 
 export {
   onAuthStateChanged,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   collection,
   doc,
   getDoc,

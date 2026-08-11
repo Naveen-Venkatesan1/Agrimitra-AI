@@ -5,6 +5,7 @@ import PlaceholderPage from '../pages/PlaceholderPage';
 import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
 import Onboarding from '../pages/auth/Onboarding';
+import FinishSignUp from '../pages/auth/FinishSignUp';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import SatelliteMap from '../pages/SatelliteMap';
@@ -101,6 +102,7 @@ export const AppRouter = () => {
         {/* Unauthenticated Routes */}
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/finishSignUp" element={<PublicRoute><FinishSignUp /></PublicRoute>} />
         <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
 
         {/* Authenticated Protected Routes under Shared AppLayout */}

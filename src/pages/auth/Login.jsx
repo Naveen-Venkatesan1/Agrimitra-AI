@@ -55,6 +55,10 @@ export const Login = () => {
   const [rememberMe, setRememberMe]     = useState(true);
   const [loading, setLoading]           = useState(false);
   const [authError, setAuthError]       = useState('');
+  const [emailLinkSent, setEmailLinkSent] = useState(false);
+  const [otpSent, setOtpSent]           = useState(false);
+  const [otpCode, setOtpCode]           = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
 
   useEffect(() => {
     const handleRedirectResult = async () => {
@@ -177,8 +181,100 @@ export const Login = () => {
     }
   };
 
+  const handleSendEmailLink = async () => {
+    if (!email || !email.includes('@')) {
+      setAuthError('Please enter a valid email address to receive a login link.');
+      return;
+    }
+    setLoading(true);
+    setAuthError('');
+    setEmailLinkSent(false);
+
+    try {
+      const res = await authApi.sendEmailSignInLink(email);
+      setLoading(false);
+      if (!res.success) {
+        setAuthError(res.error || 'Failed to send email login link. Please try again.');
+      } else {
+        setEmailLinkSent(true);
+      }
+    } catch (err) {
+      console.warn("Send email link error:", err);
+      setAuthError(err.message || 'Failed to send email sign-in link.');
+      setLoading(false);
+    }
+  };
+
+  const handleSendPhoneOTP = async () => {
+    if (!phoneNumber || phoneNumber.replace(/\D/g, '').length < 10) {
+      setAuthError('Please enter a valid 10-digit mobile number for OTP login.');
+      return;
+    }
+    setLoading(true);
+    setAuthError('');
+
+    try {
+      const res = await authApi.sendPhoneOTP(phoneNumber, 'recaptcha-container');
+      setLoading(false);
+      if (res.error) {
+        setAuthError(res.error || 'Failed to send OTP to mobile number. Please check format.');
+      } else {
+        setConfirmationResult(res.confirmationResult);
+        setOtpSent(true);
+      }
+    } catch (err) {
+      console.warn("Send phone OTP error:", err);
+      setAuthError(err.message || 'Failed to send phone OTP.');
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneOTP = async (e) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.trim().length < 6) {
+      setAuthError('Please enter the 6-digit OTP code received on your mobile phone.');
+      return;
+    }
+    setLoading(true);
+    setAuthError('');
+
+    try {
+      const res = await authApi.verifyPhoneOTP(confirmationResult, otpCode);
+      if (res.error) {
+        setAuthError(res.error || 'Invalid or expired OTP code. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      if (res.user) {
+        const { profileApi } = await import('../../services/api/profile');
+        const pRes = await profileApi.getProfile(res.user.uid).catch(() => ({ profile: null }));
+        const profile = (pRes && pRes.profile) || {};
+
+        setAuth(true, {
+          id: res.user.uid,
+          name: res.user.displayName || phoneNumber || 'Farmer User',
+          phone: res.user.phoneNumber || phoneNumber,
+          ...profile
+        });
+        setLoading(false);
+        const target = profile.onboardingCompleted ? '/dashboard' : '/onboarding';
+        navigate(target, { replace: true });
+        return;
+      }
+    } catch (err) {
+      console.warn("Verify phone OTP error:", err);
+      setAuthError(err.message || 'Failed to verify phone OTP code.');
+      setLoading(false);
+    }
+  };
+
   const quickLogin = () => { 
-    setAuthError('This login method is currently unavailable. Please use Email or Google Sign-In.');
+    if (activeTab === 'mobile' || !phoneNumber) {
+      handleSendPhoneOTP();
+    } else {
+      setAuthError('This login method is currently unavailable. Please use Email or Google Sign-In.');
+    }
   };
 
   return (
@@ -361,179 +457,283 @@ export const Login = () => {
                 })}
               </div>
 
+              {/* Invisible Recaptcha Container */}
+              <div id="recaptcha-container"></div>
+
+              {/* Email Link Sent Banner */}
+              {emailLinkSent && (
+                <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: '#065F46', fontWeight: 600, margin: 0 }}>
+                    ✓ Passwordless login link sent to <strong>{email}</strong>! Please check your inbox and click the link to log in.
+                  </p>
+                </div>
+              )}
+
               {/* ── FORM ── */}
-              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-
-                {/* Mobile / Email */}
-                {activeTab === 'mobile' ? (
-                  <div
-                    className="flex items-center overflow-hidden"
-                    style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
-                  >
-                    {/* Country code */}
-                    <div
-                      className="flex items-center gap-1 flex-shrink-0"
-                      style={{
-                        padding: '10px 11px',
-                        borderRight: '1.5px solid #D1D5DB',
-                        cursor: 'default',
-                        userSelect: 'none',
-                      }}
-                    >
-                      <span style={{ fontSize: 16, lineHeight: 1 }}>🇮🇳</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginLeft: 3 }}>+91</span>
-                      <ChevronDown style={{ width: 11, height: 11, color: '#9CA3AF', marginLeft: 2 }} />
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder={t('enter_mobile', 'Enter your mobile number')}
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '10px 13px',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        fontSize: 13.5,
-                        color: '#111827',
-                      }}
-                    />
+              {otpSent ? (
+                /* OTP Verification Form */
+                <form onSubmit={handleVerifyPhoneOTP} style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                  <div style={{ background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: 12, padding: '10px 12px' }}>
+                    <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>
+                      Enter 6-digit OTP code sent to <strong>+91 {phoneNumber}</strong>:
+                    </p>
                   </div>
-                ) : (
                   <div
                     className="flex items-center overflow-hidden"
                     style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
                   >
                     <input
-                      type="email"
-                      placeholder={t('enter_email', 'Enter your email address')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      type="text"
+                      maxLength={6}
+                      placeholder="Enter 6-digit OTP code"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                       style={{
                         flex: 1,
-                        padding: '10px 14px',
+                        padding: '11px 14px',
                         background: 'transparent',
                         border: 'none',
                         outline: 'none',
-                        fontSize: 13.5,
+                        fontSize: 14,
+                        letterSpacing: '2px',
+                        fontWeight: 700,
                         color: '#111827',
+                        textAlign: 'center'
                       }}
+                      required
                     />
                   </div>
-                )}
 
-                {/* Password */}
-                <div
-                  className="flex items-center overflow-hidden"
-                  style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
-                >
-                  <div className="flex items-center justify-center flex-shrink-0" style={{ padding: '0 12px' }}>
-                    <Lock style={{ width: 16, height: 16, color: '#9CA3AF' }} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={t('enter_password', 'Enter your password')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                  {authError && (
+                    <p style={{ fontSize: 11.5, color: '#DC2626', fontWeight: 500 }}>{authError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center justify-center gap-2 w-full transition-all"
                     style={{
-                      flex: 1,
-                      padding: '10px 0',
-                      background: 'transparent',
+                      marginTop: 4,
+                      padding: '12.5px 0',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: '#1B5E33',
                       border: 'none',
-                      outline: 'none',
-                      fontSize: 13.5,
-                      color: '#111827',
+                      borderRadius: 12,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 2px 14px rgba(27,94,51,0.32)',
                     }}
-                  />
+                  >
+                    {loading ? 'Verifying OTP...' : 'Verify OTP & Sign In'}
+                  </button>
+
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      padding: '0 12px',
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#9CA3AF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexShrink: 0,
-                    }}
+                    onClick={() => { setOtpSent(false); setOtpCode(''); setAuthError(''); }}
+                    style={{ background: 'none', border: 'none', color: '#1B5E33', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 4 }}
                   >
-                    {showPassword ? <Eye style={{ width: 17, height: 17 }} /> : <EyeOff style={{ width: 17, height: 17 }} />}
+                    Change Mobile Number / Resend OTP
                   </button>
-                </div>
+                </form>
+              ) : (
+                /* Standard Form with Email Link Option */
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
 
-                {/* Remember me + Forgot password */}
-                <div className="flex items-center justify-between" style={{ marginTop: 2 }}>
-                  <label className="flex items-center gap-2 cursor-pointer" style={{ userSelect: 'none' }}>
+                  {/* Mobile / Email Input */}
+                  {activeTab === 'mobile' ? (
                     <div
-                      onClick={() => setRememberMe(!rememberMe)}
-                      className="flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
+                      className="flex items-center overflow-hidden"
+                      style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
+                    >
+                      {/* Country code */}
+                      <div
+                        className="flex items-center gap-1 flex-shrink-0"
+                        style={{
+                          padding: '10px 11px',
+                          borderRight: '1.5px solid #D1D5DB',
+                          cursor: 'default',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <span style={{ fontSize: 16, lineHeight: 1 }}>🇮🇳</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginLeft: 3 }}>+91</span>
+                        <ChevronDown style={{ width: 11, height: 11, color: '#9CA3AF', marginLeft: 2 }} />
+                      </div>
+                      <input
+                        type="tel"
+                        placeholder={t('enter_mobile', 'Enter your mobile number')}
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '10px 13px',
+                          background: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                          fontSize: 13.5,
+                          color: '#111827',
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center overflow-hidden"
+                      style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
+                    >
+                      <input
+                        type="email"
+                        placeholder={t('enter_email', 'Enter your email address')}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                          fontSize: 13.5,
+                          color: '#111827',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Password Input */}
+                  <div
+                    className="flex items-center overflow-hidden"
+                    style={{ border: '1.5px solid #D1D5DB', borderRadius: 12, background: '#F9FAFB' }}
+                  >
+                    <div className="flex items-center justify-center flex-shrink-0" style={{ padding: '0 12px' }}>
+                      <Lock style={{ width: 16, height: 16, color: '#9CA3AF' }} />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder={t('enter_password', 'Enter your password')}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 4,
-                        background: rememberMe ? '#2E7D32' : '#fff',
-                        border: rememberMe ? '1.5px solid #2E7D32' : '1.5px solid #D1D5DB',
+                        flex: 1,
+                        padding: '10px 0',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        fontSize: 13.5,
+                        color: '#111827',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        padding: '0 12px',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9CA3AF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0,
                       }}
                     >
-                      {rememberMe && <Check style={{ width: 10, height: 10, color: '#fff', strokeWidth: 3.5 }} />}
-                    </div>
-                    <span style={{ fontSize: 12.5, fontWeight: 500, color: '#4B5563' }}>{t('remember_me', 'Remember me')}</span>
-                  </label>
-                  <a
-                    href="#forgot"
-                    style={{ fontSize: 12.5, fontWeight: 600, color: '#1B5E33', textDecoration: 'none' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                    onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                  >
-                    {t('forgot_password', 'Forgot Password?')}
-                  </a>
-                </div>
+                      {showPassword ? <Eye style={{ width: 17, height: 17 }} /> : <EyeOff style={{ width: 17, height: 17 }} />}
+                    </button>
+                  </div>
 
-                {/* Error */}
-                {authError && (
-                  <p style={{ fontSize: 11.5, color: '#DC2626', fontWeight: 500 }}>{authError}</p>
-                )}
+                  {/* Remember me + Forgot password */}
+                  <div className="flex items-center justify-between" style={{ marginTop: 2 }}>
+                    <label className="flex items-center gap-2 cursor-pointer" style={{ userSelect: 'none' }}>
+                      <div
+                        onClick={() => setRememberMe(!rememberMe)}
+                        className="flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 4,
+                          background: rememberMe ? '#2E7D32' : '#fff',
+                          border: rememberMe ? '1.5px solid #2E7D32' : '1.5px solid #D1D5DB',
+                        }}
+                      >
+                        {rememberMe && <Check style={{ width: 10, height: 10, color: '#fff', strokeWidth: 3.5 }} />}
+                      </div>
+                      <span style={{ fontSize: 12.5, fontWeight: 500, color: '#4B5563' }}>{t('remember_me', 'Remember me')}</span>
+                    </label>
+                    <a
+                      href="#forgot"
+                      style={{ fontSize: 12.5, fontWeight: 600, color: '#1B5E33', textDecoration: 'none' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                    >
+                      {t('forgot_password', 'Forgot Password?')}
+                    </a>
+                  </div>
 
-                {/* LOGIN BUTTON */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 w-full transition-all"
-                  style={{
-                    marginTop: 4,
-                    padding: '12.5px 0',
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: '#fff',
-                    background: '#1B5E33',
-                    border: 'none',
-                    borderRadius: 12,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 2px 14px rgba(27,94,51,0.32)',
-                    letterSpacing: '0.1px',
-                  }}
-                  onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#154f2a'; }}
-                  onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#1B5E33'; }}
-                >
-                  {loading ? (
-                    <>
-                      <span
-                        className="animate-spin rounded-full"
-                        style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block' }}
-                      />
-                      <span>{t('logging_in', 'Logging in...')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{t('login_button', 'Login')}</span>
-                      <ArrowRight style={{ width: 17, height: 17 }} />
-                    </>
+                  {/* Error */}
+                  {authError && (
+                    <p style={{ fontSize: 11.5, color: '#DC2626', fontWeight: 500 }}>{authError}</p>
                   )}
-                </button>
-              </form>
+
+                  {/* LOGIN BUTTON */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center justify-center gap-2 w-full transition-all"
+                    style={{
+                      marginTop: 4,
+                      padding: '12.5px 0',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: '#1B5E33',
+                      border: 'none',
+                      borderRadius: 12,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 2px 14px rgba(27,94,51,0.32)',
+                      letterSpacing: '0.1px',
+                    }}
+                    onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#154f2a'; }}
+                    onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#1B5E33'; }}
+                  >
+                    {loading ? (
+                      <>
+                        <span
+                          className="animate-spin rounded-full"
+                          style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block' }}
+                        />
+                        <span>{t('logging_in', 'Logging in...')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('login_button', 'Login')}</span>
+                        <ArrowRight style={{ width: 17, height: 17 }} />
+                      </>
+                    )}
+                  </button>
+
+                  {/* Send Email Link Secondary Option */}
+                  {activeTab === 'email' && (
+                    <button
+                      type="button"
+                      onClick={handleSendEmailLink}
+                      disabled={loading}
+                      style={{
+                        background: '#EEF7EE',
+                        border: '1px solid #C3DFC4',
+                        color: '#1B5E33',
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        padding: '9px 0',
+                        borderRadius: 12,
+                        cursor: 'pointer',
+                        marginTop: 4,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Send Passwordless Login Link to Email
+                    </button>
+                  )}
+                </form>
+              )}
 
               {/* DIVIDER */}
               <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
