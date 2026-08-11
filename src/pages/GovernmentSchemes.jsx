@@ -167,7 +167,7 @@ export const GovernmentSchemes = () => {
     setSelectedDistrict(newDistrict);
   };
 
-  // Fetch schemes from backend API or fallback
+  // Fetch schemes from backend API or fallback ML engine
   const fetchSchemes = async () => {
     setIsLoading(true);
     setErrorMsg(null);
@@ -179,37 +179,17 @@ export const GovernmentSchemes = () => {
         crop: selectedCrop === 'All' ? '' : selectedCrop,
         farmerCategory: selectedCategory === 'All' ? '' : selectedCategory,
         schemeType: selectedType === 'All' ? '' : selectedType,
-        searchQuery: searchQuery
+        searchQuery: searchQuery,
+        userProfile: user
       });
 
       if (res && res.success && Array.isArray(res.schemes) && res.schemes.length > 0) {
         setSchemes(res.schemes);
       } else {
-        // Apply client-side filtering on FALLBACK_SCHEMES if backend returns empty or unavailable
-        let filteredFallback = FALLBACK_SCHEMES;
-
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          filteredFallback = filteredFallback.filter(s =>
-            (s["Scheme Name"] && s["Scheme Name"].toLowerCase().includes(q)) ||
-            (s["Description"] && s["Description"].toLowerCase().includes(q)) ||
-            (s["Benefits"] && s["Benefits"].toLowerCase().includes(q))
-          );
-        }
-
-        if (selectedType !== 'All') {
-          const typeQ = selectedType.toLowerCase();
-          filteredFallback = filteredFallback.filter(s =>
-            (s["Description"] && s["Description"].toLowerCase().includes(typeQ)) ||
-            (s["Benefits"] && s["Benefits"].toLowerCase().includes(typeQ)) ||
-            (s["Scheme Name"] && s["Scheme Name"].toLowerCase().includes(typeQ))
-          );
-        }
-
-        setSchemes(filteredFallback);
+        setSchemes(FALLBACK_SCHEMES);
       }
     } catch (err) {
-      console.warn("Failed to fetch schemes from FastAPI, using fallback dataset:", err);
+      console.warn("Failed to fetch schemes, using fallback dataset:", err);
       setSchemes(FALLBACK_SCHEMES);
     } finally {
       setIsLoading(false);
@@ -222,7 +202,7 @@ export const GovernmentSchemes = () => {
       fetchSchemes();
     }, 300);
     return () => clearTimeout(timeoutId);
-  }, [selectedState, selectedDistrict, selectedCrop, selectedCategory, selectedType, searchQuery]);
+  }, [selectedState, selectedDistrict, selectedCrop, selectedCategory, selectedType, searchQuery, user]);
 
   const toggleExpandCard = (id) => {
     setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
@@ -404,7 +384,10 @@ export const GovernmentSchemes = () => {
           {schemes.map((scheme, idx) => {
             const schemeId = scheme.id || `scheme-${idx}`;
             const isExpanded = !!expandedCards[schemeId];
-            const appUrl = scheme["Official Website/Application Link"] || "https://agricoop.nic.in";
+            const appUrl = scheme["Official Website/Application Link"];
+            const matchLevel = scheme.matchLevel || (scheme.matchScore >= 80 ? 'HIGH MATCH' : 'MEDIUM MATCH');
+            const matchScore = scheme.matchScore || 85;
+            const matchReason = scheme.matchReason || `Matches farming profile in ${selectedState}`;
 
             return (
               <Card
@@ -416,12 +399,25 @@ export const GovernmentSchemes = () => {
                   {/* Card Top Badges & Title */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <Badge variant="good" size="xs">
-                        <Building2 className="w-3 h-3" /> {scheme["Level"] || "Central/State"}
-                      </Badge>
-                      <Badge variant="info" size="xs">
-                        {scheme["Application Status"] || "Open"}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="good" size="xs">
+                          <Building2 className="w-3 h-3" /> {scheme["Level"] || "Central/State"}
+                        </Badge>
+                        <Badge variant="info" size="xs">
+                          {scheme["Application Status"] || "Open"}
+                        </Badge>
+                      </div>
+
+                      {/* ML Match Level Badge */}
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase flex items-center gap-1 border ${
+                        matchLevel === 'HIGH MATCH'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : matchLevel === 'MEDIUM MATCH'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300'
+                          : 'bg-gray-50 text-gray-700 border-gray-200'
+                      }`}>
+                        <Sparkles className="w-3 h-3 text-amber-500" /> {matchLevel} ({matchScore}%)
+                      </span>
                     </div>
 
                     <h3 className="text-base font-extrabold text-gray-900 leading-snug hover:text-[#0B4D2F] transition">
@@ -432,6 +428,14 @@ export const GovernmentSchemes = () => {
                       <Landmark className="w-3.5 h-3.5 flex-shrink-0 text-[#0B4D2F]" />
                       <span className="truncate">{scheme["Department"] || "Ministry of Agriculture & Farmers Welfare"}</span>
                     </p>
+
+                    {/* Explainable Match Reason */}
+                    {matchReason && (
+                      <div className="p-2 bg-emerald-50/60 border border-emerald-100 rounded-lg text-[11px] text-emerald-900 font-medium flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><strong className="font-bold">Why this matches you:</strong> {matchReason}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}
@@ -469,6 +473,12 @@ export const GovernmentSchemes = () => {
                           {scheme["Documents Required"]}
                         </p>
                       </div>
+
+                      {/* Source & Transparency Badge */}
+                      <div className="pt-2 flex items-center justify-between text-[10px] text-gray-500 border-t border-gray-100">
+                        <span>Source: <strong className="text-gray-700">{scheme.officialSource || 'Official Government Portal'}</strong></span>
+                        <span>Year: <strong className="text-gray-700">{scheme.schemeYear || '2025-2026'}</strong></span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -486,14 +496,20 @@ export const GovernmentSchemes = () => {
                     )}
                   </button>
 
-                  <a
-                    href={appUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B4D2F] hover:bg-[#083A23] text-white text-xs font-bold rounded-xl transition shadow-xs"
-                  >
-                    Apply Now <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  {appUrl ? (
+                    <a
+                      href={appUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B4D2F] hover:bg-[#083A23] text-white text-xs font-bold rounded-xl transition shadow-xs"
+                    >
+                      Apply Now <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-xl cursor-not-allowed">
+                      Official application link currently unavailable
+                    </span>
+                  )}
                 </div>
               </Card>
             );

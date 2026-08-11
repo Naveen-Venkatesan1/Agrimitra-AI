@@ -478,81 +478,10 @@ Return STRICTLY JSON format with keys: "crop", "disease", "confidence", "healthS
     return { success: true, diagnosis: fallbackDiag };
   },
 
-  // Government Schemes via FastAPI / Local DB
+  // Government Schemes via ML Engine / API
   async getGovernmentSchemes(params = {}) {
-    let state = "", district = "", crop = "", farmerCategory = "", schemeType = "";
-    if (typeof params === 'string') {
-      state = params;
-    } else if (params && typeof params === 'object') {
-      state = params.state || params.State || "";
-      district = params.district || params.District || "";
-      crop = params.crop || params.Crop || "";
-      farmerCategory = params.farmerCategory || params.FarmerCategory || "";
-      schemeType = params.schemeType || params.SchemeType || "";
-    }
-
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-      const response = await fetch(`${API_BASE_URL}/api/government-schemes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          State: state, 
-          District: district, 
-          Crop: crop, 
-          FarmerCategory: farmerCategory, 
-          SchemeType: schemeType 
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        return { success: true, schemes: data['Matching Government Schemes'] || [] };
-      }
-    } catch (err) {
-      console.warn("FastAPI government-schemes fallback active:", err.message);
-    }
-
-    // Return structured default schemes if API unreachable
-    const defaultSchemes = [
-      {
-        id: 'scheme-1',
-        'Scheme Name': 'PM-KISAN Samman Nidhi',
-        Department: 'Central Government',
-        Level: 'Central',
-        Description: 'Direct income support of ₹6,000 per year in 3 equal installments to landholding farmer families.',
-        Eligibility: 'All landholding farmers with valid Aadhaar & land ownership records',
-        Benefits: '₹2,000 transferred directly to bank account every 4 months',
-        'Documents Required': 'Aadhaar Card, Land Record (Khasra/Khatauni), Bank Account Passbook',
-        'Application Status': 'Open',
-        'Official Website/Application Link': 'https://pmkisan.gov.in'
-      },
-      {
-        id: 'scheme-2',
-        'Scheme Name': 'Pradhan Mantri Fasal Bima Yojana (PMFBY)',
-        Department: 'Central / State Government',
-        Level: 'National',
-        Description: 'Comprehensive crop insurance against non-preventable natural risks, drought, pests & disease.',
-        Eligibility: 'Sharecroppers, tenant farmers & landowning farmers growing notified crops',
-        Benefits: 'Maximum 1.5% premium for Rabi, 2% for Kharif, full risk coverage',
-        'Documents Required': 'Aadhaar Card, Land Sowing Certificate, Bank Passbook',
-        'Application Status': 'Open',
-        'Official Website/Application Link': 'https://pmfby.gov.in'
-      },
-      {
-        id: 'scheme-3',
-        'Scheme Name': 'Sub-Mission on Agricultural Mechanization (SMAM)',
-        Department: 'Ministry of Agriculture',
-        Level: 'Central/State',
-        Description: 'Financial assistance for purchasing tractors, power tillers, rotavators, and harvesters.',
-        Eligibility: 'Small and marginal farmers, Women farmers, SC/ST agricultural workers',
-        Benefits: '40% to 50% capital subsidy on farm machinery',
-        'Documents Required': 'Aadhaar Card, Machinery Quote, Land Proof',
-        'Application Status': 'Open',
-        'Official Website/Application Link': 'https://agrimachinery.nic.in'
-      }
-    ];
-
-    return { success: true, schemes: defaultSchemes };
+    const { schemeApi } = await import('./scheme');
+    return schemeApi.getGovernmentSchemes(params);
   },
 
   // Get user disease detection history from Firestore
