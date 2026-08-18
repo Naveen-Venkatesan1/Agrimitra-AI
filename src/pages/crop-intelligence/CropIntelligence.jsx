@@ -507,6 +507,23 @@ export const CropIntelligence = () => {
                   </div>
                 )}
               </div>
+            ) : analysisStatus === 'error' ? (
+              <div className="py-20 text-center flex flex-col items-center justify-center bg-red-50/50 rounded-xl border border-red-100">
+                <AlertTriangle className="w-12 h-12 text-red-400 mb-3" />
+                <h4 className="text-sm font-bold text-red-900">Analysis Failed</h4>
+                <p className="text-xs text-red-700 mt-1 max-w-xs px-4">
+                  {analysisResult?.message || "Could not reach the AI Engine or an error occurred during analysis."}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={() => triggerAnalysis(selectedFile)}
+                  icon={RotateCcw}
+                >
+                  Try Again
+                </Button>
+              </div>
             ) : (
               <div className="py-20 text-center text-gray-400">
                 <Sprout className="w-12 h-12 mx-auto mb-2 text-gray-300" />
