@@ -133,6 +133,18 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
       formData.append("file", file);
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      
+      // Phase 3: Verify health endpoint first to isolate network/offline errors
+      try {
+        const healthCheck = await fetch(`${API_BASE_URL}/health`, { method: 'GET' });
+        if (!healthCheck.ok) {
+          throw new Error('Backend health check failed');
+        }
+      } catch (healthErr) {
+        console.warn("Backend /health unreachable:", healthErr.message);
+        return { success: false, error: "AI Engine Offline: Could not reach the ML backend." };
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/predict-disease`, {
         method: 'POST',
         headers: { 'X-Analysis-ID': analysisId },

@@ -278,6 +278,14 @@ def validate_image_quality(filepath: str):
     except Exception as e:
         return False, "Invalid image format or corrupted file."
 
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "agrimitra-ml",
+        "model_loaded": disease_model is not None
+    }
+
 @app.post("/api/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     # Check model loading status

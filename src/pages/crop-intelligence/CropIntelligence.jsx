@@ -35,6 +35,7 @@ export const CropIntelligence = () => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [restoring, setRestoring] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
 
   // Validate and restore active scan session on page load / browser refresh
   useEffect(() => {
@@ -100,6 +101,20 @@ export const CropIntelligence = () => {
       performNewScanReset();
     }
   };
+
+  // Loading Stages Effect
+  useEffect(() => {
+    let timer;
+    if (analysisStatus === 'analyzing') {
+      setLoadingStage(0);
+      timer = setInterval(() => {
+        setLoadingStage((prev) => Math.min(prev + 1, 4));
+      }, 1500);
+    } else {
+      setLoadingStage(0);
+    }
+    return () => clearInterval(timer);
+  }, [analysisStatus]);
 
   const triggerAnalysis = async (fileToAnalyze = selectedFile) => {
     const file = fileToAnalyze || selectedFile;
@@ -394,10 +409,16 @@ export const CropIntelligence = () => {
             </div>
 
             {analysisStatus === 'analyzing' ? (
-              <div className="py-20 text-center flex flex-col items-center justify-center">
-                <div className="w-12 h-12 border-4 border-agri-light border-t-agri-primary rounded-full animate-spin mb-3" />
-                <p className="text-xs font-bold text-agri-dark">Analyzing leaf cellular pattern...</p>
-                <p className="text-[10px] text-gray-400 mt-1">Evaluating Plant Health Score (0-100), severity, and precautions</p>
+              <div className="py-20 text-center flex flex-col items-center justify-center animate-fade-in">
+                <div className="w-12 h-12 border-4 border-agri-light border-t-agri-primary rounded-full animate-spin mb-4 shadow-sm" />
+                <p className="text-sm font-extrabold text-agri-dark transition-all duration-300">
+                  {loadingStage === 0 && "Validating leaf image..."}
+                  {loadingStage === 1 && "Analyzing crop..."}
+                  {loadingStage === 2 && "Detecting disease..."}
+                  {loadingStage === 3 && "Checking agricultural intelligence..."}
+                  {loadingStage === 4 && "Preparing recommendations..."}
+                </p>
+                <p className="text-[11px] text-gray-400 mt-1.5 font-medium">Please wait while the AI engine processes the sample.</p>
               </div>
             ) : analysisResult?.isLowConfidence ? (
               <div className="p-6 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-center space-y-3">
