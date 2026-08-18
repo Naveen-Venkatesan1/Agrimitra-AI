@@ -113,7 +113,7 @@ export const CropIntelligence = () => {
 
     if (!res.success) {
       setAnalysisStatus('error');
-      setAnalysisResult(null);
+      setAnalysisResult({ message: res.error || 'Analysis failed on backend' });
       addAlert({
         title: 'Analysis Failed',
         message: res.error || 'Analysis failed. Please try again.',
