@@ -291,11 +291,11 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
             severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : (visualData.healthScore >= 50 ? 'Moderate' : 'High')),
             affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `${visualData.affectedPct}%`),
             riskLevel: data.risk_level || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
-            treatment: recs['Chemical Treatment'] || (Array.isArray(data.treatment) ? data.treatment.join(' ') : 'Consult agricultural expert'),
+            treatment: data.chemical_treatment ? data.chemical_treatment.join(' ') : (recs['Chemical Treatment'] || 'Consult agricultural expert'),
             medicine: recs['Chemical Treatment'] || 'Fungicide treatment',
-            organicSolution: recs['Organic Treatment'] || (Array.isArray(data.treatment) ? data.treatment[1] : 'Neem spray'),
-            prevention: recs['Prevention'] || (Array.isArray(data.prevention) ? data.prevention.join(' ') : 'Crop rotation'),
-            immediatePrecautions: recs['Immediate Precautions'] || (Array.isArray(data.precautions) ? data.precautions[0] : 'Monitor leaves'),
+            organicSolution: data.biological_treatment ? data.biological_treatment.join(' ') : (recs['Organic Treatment'] || 'Neem spray'),
+            prevention: data.prevention ? data.prevention.join(' ') : (recs['Prevention'] || 'Crop rotation'),
+            immediatePrecautions: data.immediate_precautions ? data.immediate_precautions.join(' ') : (recs['Immediate Precautions'] || 'Monitor leaves'),
             futurePrevention: recs['Future Prevention'] || 'Use certified seeds',
             recoveryTimeline: recs['Recovery Timeline'] || '7-10 Days',
             nextScanReminder: recs['Next Scan Reminder'] || 'In 5 Days',
@@ -306,7 +306,10 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
             predictionTime: data.prediction_time_sec || 0.5,
             imageUrl: URL.createObjectURL(file),
             createdAt: new Date().toISOString(),
-            top3: top3Formatted
+            top3: top3Formatted,
+            biologicalTreatment: data.biological_treatment || [],
+            chemicalTreatment: data.chemical_treatment || [],
+            recovery_estimate: data.recovery_estimate || null
           };
 
           if (uid) {
