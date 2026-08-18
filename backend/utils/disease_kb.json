@@ -8,7 +8,15 @@
     "Prevention Tips": "Rake and burn fallen infected apple leaves in autumn to destroy overwintering spores.",
     "Immediate Precautions": "Improve canopy pruning to increase air movement and sunlight penetration.",
     "Future Prevention": "Plant scab-resistant apple cultivars like Liberty, Freedom, or Enterprise.",
-    "Recovery Advice": "Foliage recovery expected in 10-14 days following fungicide application."
+    "Recovery Advice": "Foliage recovery expected in 10-14 days following fungicide application.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Apple___Black_rot": {
     "Symptoms": "Purple spots on leaves expanding to frog-eye leaf spots; reddish-brown decay on fruit.",
@@ -19,7 +27,15 @@
     "Prevention Tips": "Remove all mummified apples and dead wood during winter pruning.",
     "Immediate Precautions": "Prune out infected twigs at least 15cm below visible symptoms.",
     "Future Prevention": "Maintain orchard sanitation and burn prunings immediately.",
-    "Recovery Advice": "New leaf growth remains clean after sanitation and spray treatment."
+    "Recovery Advice": "New leaf growth remains clean after sanitation and spray treatment.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Apple___Cedar_apple_rust": {
     "Symptoms": "Bright yellow-orange spots on upper leaf surface with tube-like spore structures beneath.",
@@ -30,29 +46,51 @@
     "Prevention Tips": "Remove Eastern red cedar trees within 1-2 miles of the orchard if feasible.",
     "Immediate Precautions": "Apply preventative fungicide prior to expected spring rain events.",
     "Future Prevention": "Plant rust-resistant apple varieties like Red Free or William's Pride.",
-    "Recovery Advice": "Orange leaf spots stabilize within 7-10 days after treatment."
+    "Recovery Advice": "Orange leaf spots stabilize within 7-10 days after treatment.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Apple___healthy": {
     "Symptoms": "Vibrant green leaves without spots, discoloration, or structural distortion.",
     "Cause": "Optimal orchard management, balanced nutrition, and dry foliage conditions.",
     "Biological Treatment": "Apply preventative bio-stimulants or bio-protectants once every 14 days.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Maintain foliar health with seaweed extract (2mL/L) and organic compost wash.",
     "Prevention Tips": "Maintain clean orchard floor and proper drip irrigation schedule.",
     "Immediate Precautions": "Avoid excessive nitrogen fertigation.",
     "Future Prevention": "Continue seasonal dormant oil sprays for scale and mite prevention.",
-    "Recovery Advice": "Trees are in peak healthy state."
+    "Recovery Advice": "Trees are in peak healthy state.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Blueberry___healthy": {
     "Symptoms": "Uniform green foliage, firm stems, and normal berry cluster development.",
     "Cause": "Well-drained acidic soil (pH 4.5-5.5) and appropriate mulch cover.",
     "Biological Treatment": "Apply Mycorrhizal root inoculants during early season fertigation.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Apply pine bark mulch and elemental sulfur to preserve soil acidity.",
     "Prevention Tips": "Maintain soil moisture with drip irrigation.",
     "Immediate Precautions": "Monitor soil pH every 6 months.",
     "Future Prevention": "Ensure continuous organic matter replenishment.",
-    "Recovery Advice": "Blueberry crop is healthy and flourishing."
+    "Recovery Advice": "Blueberry crop is healthy and flourishing.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Cherry_(including_sour)___Powdery_mildew": {
     "Symptoms": "White powdery fungal coating on leaves and young shoots causing curling.",
@@ -63,18 +101,33 @@
     "Prevention Tips": "Prune tree center to allow airflow and sun exposure.",
     "Immediate Precautions": "Avoid overhead irrigation during evening hours.",
     "Future Prevention": "Apply early season sulfur sprays before dense canopy closure.",
-    "Recovery Advice": "Powdery mildew washes off and leaves uncurl in 7-10 days."
+    "Recovery Advice": "Powdery mildew washes off and leaves uncurl in 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Cherry_(including_sour)___healthy": {
     "Symptoms": "Deep green, glossy foliage without leaf spots or white fungal patches.",
     "Cause": "Good canopy aeration and balanced fertigation.",
     "Biological Treatment": "Standard bio-protectant spray during flowering.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Spray compost tea or vermicompost extract.",
     "Prevention Tips": "Keep orchard floor weed-free.",
     "Immediate Precautions": "Protect foliage from severe wind damage.",
     "Future Prevention": "Conduct annual winter pruning for optimal structure.",
-    "Recovery Advice": "Cherry foliage is fully healthy."
+    "Recovery Advice": "Cherry foliage is fully healthy.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
     "Symptoms": "Rectangular grey-to-tan lesions constrained by leaf veins on lower leaves.",
@@ -85,7 +138,15 @@
     "Prevention Tips": "Rotate maize field with non-host crops like soybean or peanut for 2 years.",
     "Immediate Precautions": "Plow under or shred crop residues after harvest to reduce spore carryover.",
     "Future Prevention": "Select high-yielding grey leaf spot resistant maize hybrids.",
-    "Recovery Advice": "Lesion expansion ceases within 7 days of systemic fungicide spray."
+    "Recovery Advice": "Lesion expansion ceases within 7 days of systemic fungicide spray.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Corn_(maize)___Common_rust_": {
     "Symptoms": "Small powdery brownish-red pustules scattered on both upper and lower leaf surfaces.",
@@ -96,7 +157,15 @@
     "Prevention Tips": "Plant early in the season and use disease-resistant hybrids.",
     "Immediate Precautions": "Avoid excessive nitrogenous top-dressing.",
     "Future Prevention": "Rotate maize with legumes or soybean.",
-    "Recovery Advice": "Pustules dry up and rust spread stops in 7-10 days."
+    "Recovery Advice": "Pustules dry up and rust spread stops in 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Corn_(maize)___Northern_Leaf_Blight": {
     "Symptoms": "Long elliptical grayish-green cigar-shaped lesions expanding across leaf blades.",
@@ -107,18 +176,33 @@
     "Prevention Tips": "Manage crop residues and rotate with soybean or pulses.",
     "Immediate Precautions": "Monitor field during humid post-rain periods.",
     "Future Prevention": "Choose resistant corn hybrids with Ht resistance genes.",
-    "Recovery Advice": "Blight spot spread halted within 7 days."
+    "Recovery Advice": "Blight spot spread halted within 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Corn_(maize)___healthy": {
     "Symptoms": "Sturdy green leaves without lesions, striping, or fungal rust pustules.",
     "Cause": "Adequate NPK nutrition and proper crop rotation.",
     "Biological Treatment": "Apply PSB (Phosphate Solubilizing Bacteria) to roots.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Apply vermicompost and liquid humic acid.",
     "Prevention Tips": "Maintain optimum plant population and inter-row spacing.",
     "Immediate Precautions": "Avoid waterlogging during vegetative stage.",
     "Future Prevention": "Soil testing prior to next planting season.",
-    "Recovery Advice": "Maize crop is in excellent health."
+    "Recovery Advice": "Maize crop is in excellent health.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Grape___Black_rot": {
     "Symptoms": "Small reddish-brown spots on leaves; dark shriveled black mummy berries on clusters.",
@@ -129,7 +213,15 @@
     "Prevention Tips": "Destroy all mummified grape clusters and pruned canes during winter.",
     "Immediate Precautions": "Tuck shoots to ensure good sun exposure and fast canopy drying.",
     "Future Prevention": "Establish vine trellising for optimal ventilation.",
-    "Recovery Advice": "Foliar black rot spots dry out in 7-10 days."
+    "Recovery Advice": "Foliar black rot spots dry out in 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Grape___Esca_(Black_Measles)": {
     "Symptoms": "Tiger-stripe yellow/brown leaf chlorosis; dark purple spots on fruit skins.",
@@ -140,7 +232,15 @@
     "Prevention Tips": "Prune vines during dry weather to prevent spore entry into wood wounds.",
     "Immediate Precautions": "Mark infected vines and prune them last to avoid tool contamination.",
     "Future Prevention": "Replace severely declining vines with healthy certified stock.",
-    "Recovery Advice": "Manage vine stress to prolong productivity."
+    "Recovery Advice": "Manage vine stress to prolong productivity.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
     "Symptoms": "Irregular dark brown leaf spots with yellow halos, leading to leaf drop.",
@@ -151,18 +251,33 @@
     "Prevention Tips": "Remove and burn fallen infected leaf debris after harvest.",
     "Immediate Precautions": "Ensure effective summer canopy pruning.",
     "Future Prevention": "Maintain balanced potassium and nitrogen supply.",
-    "Recovery Advice": "Leaf defoliation controlled within 10 days."
+    "Recovery Advice": "Leaf defoliation controlled within 10 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Grape___healthy": {
     "Symptoms": "Lush dark green vine foliage and healthy berry clusters without spots.",
     "Cause": "Balanced canopy management and timely spray schedule.",
     "Biological Treatment": "Seasonal bio-stimulant foliar spray.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Foliar feed with seaweed extract and liquid potash.",
     "Prevention Tips": "Maintain clean vineyard rows.",
     "Immediate Precautions": "Protect vines from mechanical fruit injury.",
     "Future Prevention": "Winter pruning and sanitation routine.",
-    "Recovery Advice": "Vineyard foliage is in prime condition."
+    "Recovery Advice": "Vineyard foliage is in prime condition.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Orange___Haunglongbing_(Citrus_greening)": {
     "Symptoms": "Asymmetrical yellow mottling on leaves, stunted small green sour fruit with dark seeds.",
@@ -173,7 +288,15 @@
     "Prevention Tips": "Plant only certified disease-free citrus saplings from accredited nurseries.",
     "Immediate Precautions": "Remove severely infected trees to prevent orchard-wide transmission.",
     "Future Prevention": "Implement strict psyllid monitor traps and regional management.",
-    "Recovery Advice": "Maintain nutritional sprays (Zn, Fe, Mn) to support affected trees."
+    "Recovery Advice": "Maintain nutritional sprays (Zn, Fe, Mn) to support affected trees.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Peach___Bacterial_spot": {
     "Symptoms": "Small water-soaked leaf spots turning dark brown-purple, eventually dropping out (shot-hole).",
@@ -184,18 +307,33 @@
     "Prevention Tips": "Avoid planting susceptible peach varieties in high-wind, wet locations.",
     "Immediate Precautions": "Do not spray high-concentration copper during green leafing to avoid phytotoxicity.",
     "Future Prevention": "Select bacterial spot resistant peach cultivars like Candor or Sentinel.",
-    "Recovery Advice": "Shot-hole leaf drop stabilizes after copper treatment."
+    "Recovery Advice": "Shot-hole leaf drop stabilizes after copper treatment.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Peach___healthy": {
     "Symptoms": "Smooth green foliage, vibrant bark, and clean fruit skin.",
     "Cause": "Optimal orchard aeration and balanced micro-nutrient management.",
     "Biological Treatment": "Regular bio-antagonistic foliar sprays.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Foliar application of vermicompost leachate.",
     "Prevention Tips": "Maintain orchard floor cover crops.",
     "Immediate Precautions": "Prune dead shoots promptly.",
     "Future Prevention": "Routine dormant oil application.",
-    "Recovery Advice": "Peach trees are fully healthy."
+    "Recovery Advice": "Peach trees are fully healthy.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Pepper,_bell___Bacterial_spot": {
     "Symptoms": "Small yellow-green leaf spots growing into dark raised water-soaked lesions with yellow halos.",
@@ -206,18 +344,33 @@
     "Prevention Tips": "Use certified disease-free pepper seeds and avoid overhead irrigation.",
     "Immediate Precautions": "Sanitize equipment and shears before moving between fields.",
     "Future Prevention": "Practice 2-3 year crop rotation away from solanaceous crops.",
-    "Recovery Advice": "Bacterial lesion spread halted within 7 days."
+    "Recovery Advice": "Bacterial lesion spread halted within 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Pepper,_bell___healthy": {
     "Symptoms": "Uniform green pepper leaves and firm fruits without spots or wilting.",
     "Cause": "Proper soil drainage, balanced NPK fertigation, and pest control.",
     "Biological Treatment": "Soil drench with Trichoderma viride.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Foliar spray with panchagavya 3% or vermiwash.",
     "Prevention Tips": "Mulch soil around plants to retain moisture.",
     "Immediate Precautions": "Monitor for early thrips or aphid vectors.",
     "Future Prevention": "Maintain soil health and crop rotation.",
-    "Recovery Advice": "Bell pepper plants are in great condition."
+    "Recovery Advice": "Bell pepper plants are in great condition.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Potato___Early_blight": {
     "Symptoms": "Dark brown spots with concentric target-like rings on lower mature potato leaves.",
@@ -228,7 +381,15 @@
     "Prevention Tips": "Maintain high soil fertility with adequate potassium and nitrogen.",
     "Immediate Precautions": "Remove and burn lower infected leaves; hill potato rows high.",
     "Future Prevention": "Use 3-year crop rotation with non-solanaceous crops.",
-    "Recovery Advice": "Leaf spotting stops spreading within 7-10 days."
+    "Recovery Advice": "Leaf spotting stops spreading within 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Potato___Late_blight": {
     "Symptoms": "Large dark brown-black water-soaked lesions on leaf tips/edges with white mold underneath.",
@@ -239,40 +400,69 @@
     "Prevention Tips": "Plant certified disease-free seed tubers and hill soil high over developing tubers.",
     "Immediate Precautions": "Destroy heavily infected foliage 2 weeks prior to harvest to protect tubers.",
     "Future Prevention": "Cultivate late-blight resistant potato varieties.",
-    "Recovery Advice": "Re-check field in 5 days after systemic fungicide application."
+    "Recovery Advice": "Re-check field in 5 days after systemic fungicide application.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 5,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Potato___healthy": {
     "Symptoms": "Lush green potato foliage and sturdy stems free of lesions.",
     "Cause": "Certified clean seed tubers, ideal soil moisture, and good hilling.",
     "Biological Treatment": "Soil application of bio-fertilizers (Azotobacter, PSB).",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Foliar feed with Panchagavya 3% or neem spray.",
     "Prevention Tips": "Keep ridges well-hilled to prevent tuber exposure.",
     "Immediate Precautions": "Avoid waterlogging during tuber initiation.",
     "Future Prevention": "Regular crop rotation schedule.",
-    "Recovery Advice": "Potato crop is healthy and vigorous."
+    "Recovery Advice": "Potato crop is healthy and vigorous.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Raspberry___healthy": {
     "Symptoms": "Bright green leaves, clean canes, and normal flower/fruit clusters.",
     "Cause": "Good row spacing, drip irrigation, and cane pruning.",
     "Biological Treatment": "Apply Bacillus thuringiensis for early caterpillars if needed.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Mulch row beds with wood chips or straw.",
     "Prevention Tips": "Prune out spent floricanes immediately after harvest.",
     "Immediate Precautions": "Keep weed competition low.",
     "Future Prevention": "Maintain wide row spacing for sunlight.",
-    "Recovery Advice": "Raspberry canes are healthy."
+    "Recovery Advice": "Raspberry canes are healthy.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Soybean___healthy": {
     "Symptoms": "Uniform green trifoliate leaves without yellowing, rust, or bacterial spots.",
     "Cause": "Rhizobium nodulation, adequate rainfall, and insect management.",
     "Biological Treatment": "Seed inoculation with Bradyrhizobium japonicum.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Foliar application of liquid humic acid and micronutrient zinc.",
     "Prevention Tips": "Maintain optimum seed depth and field drainage.",
     "Immediate Precautions": "Avoid field access when leaves are wet.",
     "Future Prevention": "Rotate soybean with corn or wheat.",
-    "Recovery Advice": "Soybean field is in peak condition."
+    "Recovery Advice": "Soybean field is in peak condition.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Squash___Powdery_mildew": {
     "Symptoms": "Dusty white powdery coating covering upper leaf surfaces, turning leaves yellow and brittle.",
@@ -283,7 +473,15 @@
     "Prevention Tips": "Plant squash in full sunlight with adequate spacing for air circulation.",
     "Immediate Precautions": "Remove severely infected older leaves at base of plant.",
     "Future Prevention": "Select PM-resistant squash and pumpkin hybrids.",
-    "Recovery Advice": "Powdery mildew washes off and new leaves remain green in 7 days."
+    "Recovery Advice": "Powdery mildew washes off and new leaves remain green in 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Strawberry___Leaf_scorch": {
     "Symptoms": "Irregular purple-red spots with dark brown centers on leaves, causing scorched dry leaf edges.",
@@ -294,18 +492,33 @@
     "Prevention Tips": "Use straw mulch around plants to prevent leaf contact with wet soil.",
     "Immediate Precautions": "Remove old infected leaves during post-harvest renovation.",
     "Future Prevention": "Switch from overhead sprinklers to drip irrigation.",
-    "Recovery Advice": "New strawberry runner leaves emerge healthy within 10 days."
+    "Recovery Advice": "New strawberry runner leaves emerge healthy within 10 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Strawberry___healthy": {
     "Symptoms": "Dark green trifoliate leaves, healthy white blooms, and clean runner crowns.",
     "Cause": "Adequate drip fertigation and proper mulching.",
     "Biological Treatment": "Soil application of Mycorrhiza fungi.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Spray vermicompost wash and organic potassium.",
     "Prevention Tips": "Renovate strawberry beds annually.",
     "Immediate Precautions": "Prevent fruit resting directly on damp soil.",
     "Future Prevention": "Plant certified disease-free crowns.",
-    "Recovery Advice": "Strawberry plants are completely healthy."
+    "Recovery Advice": "Strawberry plants are completely healthy.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Tomato___Bacterial_spot": {
     "Symptoms": "Small dark brown water-soaked leaf spots with yellow halos, leading to defoliation.",
@@ -316,7 +529,15 @@
     "Prevention Tips": "Treat seeds with hot water or sodium hypochlorite before sowing.",
     "Immediate Precautions": "Prune bottom foliage and avoid handling plants when wet.",
     "Future Prevention": "Maintain 2-3 year crop rotation away from solanaceous crops.",
-    "Recovery Advice": "Bacterial spot spread stops within 7 days."
+    "Recovery Advice": "Bacterial spot spread stops within 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Early_blight": {
     "Symptoms": "Dark brown concentric target-like rings on mature lower leaves with yellow halos.",
@@ -327,7 +548,15 @@
     "Prevention Tips": "Mulch soil around base with straw to stop soil splash.",
     "Immediate Precautions": "Prune and burn infected bottom leaves immediately.",
     "Future Prevention": "Plant resistant hybrids and maintain strict Solanaceae crop rotation.",
-    "Recovery Advice": "Expect leaf recovery within 10-14 days."
+    "Recovery Advice": "Expect leaf recovery within 10-14 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Late_blight": {
     "Symptoms": "Large water-soaked dark green-black lesions on leaves and stems with white mold.",
@@ -338,7 +567,15 @@
     "Prevention Tips": "Ensure high-ridge planting for efficient drainage.",
     "Immediate Precautions": "Isolate affected field patch; avoid morning harvesting.",
     "Future Prevention": "Use certified late-blight resistant tomato cultivars.",
-    "Recovery Advice": "Evaluate field recovery after 7 days."
+    "Recovery Advice": "Evaluate field recovery after 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Leaf_Mold": {
     "Symptoms": "Pale yellow spots on upper leaf surface with velvety olive-green fungal mold underneath.",
@@ -349,7 +586,15 @@
     "Prevention Tips": "Increase greenhouse ventilation and lower indoor relative humidity below 85%.",
     "Immediate Precautions": "Prune overcrowded lower branches to promote air movement.",
     "Future Prevention": "Select leaf mold resistant tomato varieties (Cf-9 gene).",
-    "Recovery Advice": "Fungal velvety growth dries up in 7-10 days."
+    "Recovery Advice": "Fungal velvety growth dries up in 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Septoria_leaf_spot": {
     "Symptoms": "Numerous small circular spots with dark brown margins and greyish centers containing tiny black dots.",
@@ -360,7 +605,15 @@
     "Prevention Tips": "Mulch heavy around tomato roots and use drip irrigation.",
     "Immediate Precautions": "Remove lower infected leaves before spots reach upper canopy.",
     "Future Prevention": "Rotate away from tomatoes, potatoes, and eggplant for 2 years.",
-    "Recovery Advice": "Septoria spot expansion halts in 7 days."
+    "Recovery Advice": "Septoria spot expansion halts in 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Spider_mites Two-spotted_spider_mite": {
     "Symptoms": "Fine yellow speckling/bronzing on upper leaves with delicate silk webbing underneath.",
@@ -371,7 +624,15 @@
     "Prevention Tips": "Keep field perimeters wet and dust-free to discourage spider mite buildup.",
     "Immediate Precautions": "Direct spray nozzles thoroughly at undersides of leaves.",
     "Future Prevention": "Avoid over-application of synthetic pyrethroid insecticides.",
-    "Recovery Advice": "New leaf growth emerges un-speckled within 5-7 days."
+    "Recovery Advice": "New leaf growth emerges un-speckled within 5-7 days.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Target_Spot": {
     "Symptoms": "Small water-soaked leaf spots expanding into brown lesions with faint concentric rings.",
@@ -382,7 +643,15 @@
     "Prevention Tips": "Avoid planting near older infected solanaceous crop fields.",
     "Immediate Precautions": "Improve plant staking and row aeration.",
     "Future Prevention": "Perform field sanitation and turn under crop debris post-harvest.",
-    "Recovery Advice": "Target spots dry up and stop expanding within 7 days."
+    "Recovery Advice": "Target spots dry up and stop expanding within 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
     "Symptoms": "Severe upward leaf curling, yellowing leaf margins, stunted plant growth, and flower drop.",
@@ -393,7 +662,15 @@
     "Prevention Tips": "Use 40-mesh insect-proof netting over nurseries and young seedling beds.",
     "Immediate Precautions": "Rogue out severely stunted virused plants early to reduce vector inoculum.",
     "Future Prevention": "Plant TYLCV-resistant tomato hybrids (e.g., Ty-1/Ty-3 gene cultivars).",
-    "Recovery Advice": "Vector control stops virus spread to healthy neighboring plants."
+    "Recovery Advice": "Vector control stops virus spread to healthy neighboring plants.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___Tomato_mosaic_virus": {
     "Symptoms": "Mottled light and dark green mosaic patterns on leaves, leaf distortion, and fern-like leaves.",
@@ -404,18 +681,33 @@
     "Prevention Tips": "Wash hands with soap and water before handling tomato plants; do not smoke near plants.",
     "Immediate Precautions": "Sanitize pruning shears with 70% alcohol or 10% bleach solution between rows.",
     "Future Prevention": "Plant certified ToMV-resistant cultivars (Tm-22 gene).",
-    "Recovery Advice": "Strict hygiene halts viral spread."
+    "Recovery Advice": "Strict hygiene halts viral spread.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Tomato___healthy": {
     "Symptoms": "No spots or lesions. Stems and foliage are vibrant green and structurally strong.",
     "Cause": "Optimal soil moisture, balanced nutrition, and clean field hygiene.",
     "Biological Treatment": "Apply Trichoderma viride or Pseudomonas fluorescens as bio-protectants once every 14 days.",
-    "Chemical Treatment": "None required.",
+    "Chemical Treatment": "",
     "Organic Recommendation": "Spray neem oil 3% or vermicompost wash to maintain foliar immunity.",
     "Prevention Tips": "Maintain 60cm row spacing for adequate sunlight penetration and airflow.",
     "Immediate Precautions": "Avoid flood irrigation during high-humidity evenings.",
     "Future Prevention": "Practice 3-year crop rotation with non-solanaceous crops.",
-    "Recovery Advice": "Field is in optimal health. Continue standard fertigation."
+    "Recovery Advice": "Field is in optimal health. Continue standard fertigation.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    }
   },
   "Rice___Leaf_Blast": {
     "Symptoms": "Diamond or spindle-shaped lesions with grayish centers and reddish-brown borders on leaf blades.",
@@ -426,7 +718,15 @@
     "Prevention Tips": "Avoid excessive nitrogen fertigation; split nitrogen into 3-4 applications.",
     "Immediate Precautions": "Drain standing water from field for 2-3 days to reduce canopy humidity.",
     "Future Prevention": "Cultivate blast-resistant varieties like ADT 43, CO 51, or CR Dhan 305.",
-    "Recovery Advice": "Visible suppression of diamond spots expected within 8-10 days."
+    "Recovery Advice": "Visible suppression of diamond spots expected within 8-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 8,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Rice___Bacterial_blight": {
     "Symptoms": "Wavy yellow-to-brown wilting stripes starting from leaf tips and margins, progressing downwards.",
@@ -437,7 +737,15 @@
     "Prevention Tips": "Drain excess field water and avoid clipping leaf tips during transplanting.",
     "Immediate Precautions": "Refrain from excessive top-dressing of urea fertilizer.",
     "Future Prevention": "Grow resistant rice varieties such as Improved Samba Mahsuri (RP Bio-226).",
-    "Recovery Advice": "Bacterial spread halts within 5-7 days following copper-streptomycin application."
+    "Recovery Advice": "Bacterial spread halts within 5-7 days following copper-streptomycin application.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 7,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Rice___Brown_spot": {
     "Symptoms": "Oval or circular dark brown spots with yellow halos evenly distributed across mature leaf blades.",
@@ -448,7 +756,15 @@
     "Prevention Tips": "Maintain balanced soil fertility, applying Zinc Sulfate @ 25kg/ha at basal planting.",
     "Immediate Precautions": "Provide timely irrigation to relieve moisture stress.",
     "Future Prevention": "Conduct soil test and replenish potassium and organic matter prior to next season.",
-    "Recovery Advice": "Leaf vigor recovers in 10 days upon nutrient replenishment and spray."
+    "Recovery Advice": "Leaf vigor recovers in 10 days upon nutrient replenishment and spray.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Unknown": {
     "Symptoms": "Unusual leaf discoloration, spotting, or leaf curling.",
@@ -459,7 +775,15 @@
     "Prevention Tips": "Maintain proper field drainage and crop sanitation.",
     "Immediate Precautions": "Monitor field daily and capture clear foliar images for re-scan.",
     "Future Prevention": "Conduct soil and water quality testing.",
-    "Recovery Advice": "Re-assess plant health score in 5 days."
+    "Recovery Advice": "Re-assess plant health score in 5 days.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 5,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Rice___Bacterial_leaf_blight": {
     "disease": "Bacterial Leaf Blight",
@@ -471,7 +795,15 @@
     "Prevention Tips": "Use resistant rice varieties, maintain balanced soil nutrition, and burn infected crop stubble.",
     "Organic Recommendation": "Spray Fresh Neem Kernel Extract 5% or Pseudomonas fluorescens @ 10g/L.",
     "Chemical Treatment": "Apply Copper Hydroxide 77% WP @ 2g/L or Streptocycline @ 0.1g/L combined with Copper Oxychloride 3g/L.",
-    "Recovery Advice": "Lesion expansion slows down and new tillers show healthy green foliage within 10-12 days."
+    "Recovery Advice": "Lesion expansion slows down and new tillers show healthy green foliage within 10-12 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 12,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   },
   "Rice___Leaf_smut": {
     "disease": "Leaf Smut",
@@ -483,6 +815,14 @@
     "Prevention Tips": "Rotate crops seasonally, balance N-P-K fertilizer applications, and remove field weeds.",
     "Organic Recommendation": "Foliar spray of Trichoderma harzianum @ 5g/L or neem oil 3% solution.",
     "Chemical Treatment": "Apply Propiconazole 25% EC @ 1mL/L or Mancozeb 75% WP @ 2g/L.",
-    "Recovery Advice": "Infection stabilizes and fresh leaves emerge clean within 7-10 days."
+    "Recovery Advice": "Infection stabilizes and fresh leaves emerge clean within 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    }
   }
 }

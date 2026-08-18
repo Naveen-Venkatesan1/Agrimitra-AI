@@ -1,5 +1,7 @@
 import os
 import json
+import base64
+import requests
 import sqlite3
 import time
 import logging
@@ -278,100 +280,164 @@ async def predict_disease(file: UploadFile = File(...)):
         top3_preds = [disease_classes[i] for i in top3_idx]
         top3_conf = [round(float(preds[i]) * 100, 2) for i in top3_idx]
         
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-            
-        pred_time = round(time.time() - start_time, 4)
-        logging.info(f"[ML INFERENCE] Image: {file.filename} | Predicted: {disease_name} | Confidence: {confidence*100:.2f}% | Latency: {pred_time}s")
+        # Plant.id Integration
+        plant_id_key = os.environ.get("PLANT_ID_API_KEY")
+        pid_crop = None
+        pid_disease = None
+        pid_confidence = 0.0
+        pid_is_healthy = False
+        pid_used = False
         
-        # Section 11: Low Confidence Guardrail (< 50%)
-        if confidence < 0.50:
+        if plant_id_key and len(plant_id_key) > 5:
+            try:
+                with open(temp_file_path, "rb") as image_file:
+                    encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                
+                # Health assessment API call
+                pid_response = requests.post(
+                    "https://plant.id/api/v3/health_assessment",
+                    json={"images": [encoded_string], "similar_images": False},
+                    headers={"Api-Key": plant_id_key},
+                    timeout=10
+                )
+                
+                if pid_response.status_code == 200:
+                    pid_used = True
+                    pid_data = pid_response.json()
+                    res_result = pid_data.get("result", {})
+                    health = res_result.get("disease", {})
+                    h_suggestions = health.get("suggestions", [])
+                    
+                    if h_suggestions:
+                        top_health = h_suggestions[0]
+                        pid_disease = top_health.get("name")
+                        pid_confidence = top_health.get("probability", 0.0)
+                        
+                    is_healthy_obj = res_result.get("is_healthy", {})
+                    if is_healthy_obj.get("binary"):
+                        pid_is_healthy = True
+            except Exception as e:
+                logging.error(f"Plant.id API error: {e}")
+
+        # RECONCILIATION LOGIC
+        final_disease_name = disease_name
+        final_confidence = confidence
+        corroborated = False
+        
+        # Fuzzy matching between local ML and Plant.id
+        if pid_used and pid_disease:
+            local_disease_clean = disease_name.split("___")[-1].replace("_", " ").lower()
+            pid_disease_lower = pid_disease.lower()
+            
+            # Case A: Both identify the same disease (or close match)
+            if local_disease_clean in pid_disease_lower or pid_disease_lower in local_disease_clean:
+                # Documented rule: Increase confidence by 15% (up to max 99%)
+                final_confidence = min(0.99, confidence + 0.15)
+                corroborated = True
+            else:
+                # Case B: Results differ. Strongest supported result wins.
+                # Only use Plant.id if it's much higher confidence and maps to a known KB class.
+                if pid_confidence > (confidence + 0.20):
+                    # Try to map pid_disease to disease_classes
+                    for d_cls in disease_classes:
+                        if pid_disease_lower in d_cls.replace("_", " ").lower():
+                            final_disease_name = d_cls
+                            final_confidence = pid_confidence
+                            break
+                            
+        # Case D & E: Low confidence
+        if final_confidence < 0.50:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
             return {
                 "success": False,
                 "is_low_confidence": True,
                 "status": "low_confidence",
-                "error": "Unable to confidently identify this leaf. Please upload a clear image of the affected leaf.",
-                "message": "Unable to confidently identify this leaf. Please upload a clear image of the affected leaf.",
-                "confidence": round(confidence * 100, 2),
+                "error": "Low confidence — please upload a clearer leaf image.",
+                "message": "Low confidence — please upload a clearer leaf image.",
+                "confidence": round(final_confidence * 100, 2),
                 "top_predictions": dict(zip(top3_preds, top3_conf)),
                 "top_3_predictions": dict(zip(top3_preds, top3_conf)),
-                "prediction_time_sec": pred_time
+                "prediction_time_sec": round(time.time() - start_time, 4)
             }
+        
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
             
+        pred_time = round(time.time() - start_time, 4)
+        logging.info(f"[ML INFERENCE] Final Predicted: {final_disease_name} | Confidence: {final_confidence*100:.2f}%")
+        
         # Parse crop and disease names
-        if "___" in disease_name:
-            parts = disease_name.split("___")
+        if "___" in final_disease_name:
+            parts = final_disease_name.split("___")
             detected_crop = parts[0].replace("_", " ")
             detected_disease = parts[1].replace("_", " ")
         else:
             detected_crop = "Crop"
-            detected_disease = disease_name.replace("_", " ")
+            detected_disease = final_disease_name.replace("_", " ")
             
-        is_healthy = "healthy" in disease_name.lower()
-        severity = "Low" if is_healthy else ("High" if confidence > 0.85 else "Moderate")
-        health_score, rating = compute_plant_health_score(disease_name, confidence, severity)
+        is_healthy = "healthy" in final_disease_name.lower() or pid_is_healthy
+        severity = "Low" if is_healthy else ("High" if final_confidence > 0.85 else "Moderate")
+        health_score, rating = compute_plant_health_score(final_disease_name, final_confidence, severity)
         
         # Fetch knowledge base entry
-        kb_info = disease_kb.get(disease_name, {})
+        kb_info = disease_kb.get(final_disease_name, {})
         
-        # Format response
+        # New Structured Format
+        recovery_est = kb_info.get("recovery_estimate", {"minimum_days": 7, "maximum_days": 14, "conditions": []})
         if is_healthy:
-            precautions = [
-                kb_info.get("Immediate Precautions", "Maintain regular field irrigation and monitoring."),
-                kb_info.get("Prevention Tips", "Apply balanced organic N-P-K bio-fertilizers.")
-            ]
-            treatment = [
-                kb_info.get("Organic Recommendation", "No chemical treatment required. Maintain soil health."),
-                kb_info.get("Chemical Treatment", "No pesticide application needed.")
-            ]
-            prevention = [
-                kb_info.get("Prevention Tips", "Continue routine weeding and crop rotation."),
-                kb_info.get("Future Prevention", "Use certified disease-resistant seeds.")
-            ]
+            recovery_est = {"minimum_days": 0, "maximum_days": 0, "conditions": ["Plant is healthy"]}
+            
+        if is_healthy:
+            precautions = [kb_info.get("Immediate Precautions", "Maintain regular field irrigation and monitoring.")]
+            treatment = []  # No chemical treatment for healthy plants!
+            organic = [kb_info.get("Biological Treatment", "Apply bio-stimulants.")]
+            prevention = [kb_info.get("Prevention Tips", "Continue routine weeding and crop rotation.")]
         else:
-            precautions = [
-                kb_info.get("Immediate Precautions", "Prune infected leaves immediately and isolate field patch."),
-                kb_info.get("Prevention Tips", "Improve field aeration and avoid evening overhead sprinkler irrigation.")
-            ]
-            treatment = [
-                kb_info.get("Organic Recommendation", "Apply Neem Seed Kernel Extract (NSKE 5%) or Trichoderma viride."),
-                kb_info.get("Chemical Treatment", "Apply recommended copper fungicide or systemic spray.")
-            ]
-            prevention = [
-                kb_info.get("Prevention Tips", "Maintain crop rotation and field sanitation."),
-                kb_info.get("Future Prevention", "Plant certified disease-resistant varieties.")
-            ]
+            precautions = [kb_info.get("Immediate Precautions", "Prune infected leaves immediately.")]
+            treatment = [kb_info.get("Chemical Treatment", "Consult agricultural expert.")]
+            organic = [kb_info.get("Biological Treatment", "Apply appropriate bio-fungicide.")]
+            prevention = [kb_info.get("Prevention Tips", "Maintain crop rotation.")]
             
         return {
             "success": True,
             "status": "success",
+            "analysis_id": f"analysis_{int(time.time())}",
             "crop": detected_crop,
             "disease": detected_disease,
-            "prediction": disease_name,
-            "confidence": round(confidence * 100, 2),
+            "prediction": final_disease_name,
+            "confidence": round(final_confidence * 100, 2),
+            "corroborated_by_plant_id": corroborated,
             "health_score": health_score,
             "health_rating": rating,
             "severity": severity,
             "affected_area": "2-5%" if is_healthy else ("25-40%" if severity == "High" else "12-25%"),
             "risk_level": severity,
-            "model_version": "v1 (MobileNetV2)",
+            "model_version": "v1 (MobileNetV2 + Plant.id)",
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "top_predictions": dict(zip(top3_preds, top3_conf)),
             "top_3_predictions": dict(zip(top3_preds, top3_conf)),
             "test_accuracy": disease_config.get("test_accuracy", 0.95),
             "prediction_time_sec": pred_time,
+            "immediate_precautions": precautions,
+            "biological_treatment": organic,
+            "chemical_treatment": treatment,
+            "prevention": prevention,
+            "recovery_estimate": recovery_est,
+            "sources": ["plant_id", "agrimitra_knowledge_base"] if pid_used else ["agrimitra_knowledge_base"],
+            
+            # Legacy compatibility fields
             "precautions": precautions,
             "treatment": treatment,
-            "prevention": prevention,
             "recommendations": {
                 "Symptoms": kb_info.get("Symptoms", "Foliar lesions or spots observed."),
                 "Cause": kb_info.get("Cause", "Pathogenic organism under humid conditions."),
-                "Organic Treatment": kb_info.get("Organic Recommendation", treatment[0]),
-                "Chemical Treatment": kb_info.get("Chemical Treatment", treatment[1]),
-                "Prevention": kb_info.get("Prevention Tips", prevention[0]),
-                "Immediate Precautions": kb_info.get("Immediate Precautions", precautions[0]),
-                "Future Prevention": kb_info.get("Future Prevention", prevention[1]),
-                "Recovery Timeline": kb_info.get("Recovery Advice", "7-10 Days" if not is_healthy else "Immediate"),
+                "Organic Treatment": organic[0] if organic else "None",
+                "Chemical Treatment": treatment[0] if treatment else "None",
+                "Prevention": prevention[0] if prevention else "None",
+                "Immediate Precautions": precautions[0] if precautions else "None",
+                "Future Prevention": kb_info.get("Future Prevention", "Use certified seeds."),
+                "Recovery Timeline": f"{recovery_est.get('minimum_days', 7)}-{recovery_est.get('maximum_days', 14)} Days" if not is_healthy else "Immediate",
                 "Next Scan Reminder": "In 5 Days"
             }
         }
@@ -461,7 +527,13 @@ async def chatbot_context(data: ChatbotContextInput):
     elif "disease" in q or "what is this" in q or "diagnose" in q or "identify" in q or "symptom" in q:
         answer = f"Your latest leaf scan for {crop} indicates {disease} (Confidence: {conf}%, Plant Health Score: {score}/100).\nImmediate Precaution: {precautions}"
     elif "recover" in q or "heal" in q or "timeline" in q:
-        answer = f"With timely application of {organic}, recovery for {crop} ({disease}) is expected within 7 to 10 days."
+        rec_est = diag.get("recovery_estimate", {})
+        min_d = rec_est.get("minimum_days", 7)
+        max_d = rec_est.get("maximum_days", 14)
+        if min_d == 0 and max_d == 0:
+            answer = f"Your {crop} is healthy, so no recovery timeline is necessary."
+        else:
+            answer = f"With timely application of {organic}, recovery for {crop} ({disease}) is estimated within {min_d} to {max_d} days under favorable conditions."
     else:
         answer = f"I am your AgriMitra AI Assistant. Regarding your recent {crop} scan ({disease}): {organic} How else can I assist with your field management?"
 

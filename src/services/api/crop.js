@@ -133,89 +133,36 @@ const analyzeLeafPixels = (file) => new Promise((resolve) => {
 
 // Fallback Leaf Disease Diagnosis Generator with Dynamic Health Score
 const generateFallbackDiagnosis = (fileName = '', analysisId = '', visualData = null) => {
-  const nameLower = String(fileName).toLowerCase();
+  // REMOVED: Filename-based fake diagnosis logic.
+  // The system should not fabricate a disease prediction if all AI engines are offline.
   
-  let crop = 'Paddy (Rice)';
-  let disease = 'Paddy Leaf Blast';
-  let isHealthy = false;
-
-  if (nameLower.includes('tomato')) {
-    crop = 'Tomato';
-    disease = nameLower.includes('health') ? 'Tomato Healthy' : 'Tomato Early Blight';
-  } else if (nameLower.includes('potato')) {
-    crop = 'Potato';
-    disease = nameLower.includes('health') ? 'Potato Healthy' : 'Potato Late Blight';
-  } else if (nameLower.includes('corn') || nameLower.includes('maize')) {
-    crop = 'Maize';
-    disease = nameLower.includes('health') ? 'Maize Healthy' : 'Common Rust';
-  } else if (nameLower.includes('cotton')) {
-    crop = 'Cotton';
-    disease = nameLower.includes('health') ? 'Cotton Healthy' : 'Cotton Bacterial Blight';
-  } else if (nameLower.includes('wheat')) {
-    crop = 'Wheat';
-    disease = nameLower.includes('health') ? 'Wheat Healthy' : 'Wheat Yellow Rust';
-  } else if (nameLower.includes('healthy') || nameLower.includes('clean')) {
-    crop = 'Paddy (Rice)';
-    disease = 'Paddy Healthy';
-    isHealthy = true;
-  }
-
-  if (disease.toLowerCase().includes('healthy')) {
-    isHealthy = true;
-  }
-
-  const confidence = visualData?.confidence || (Math.round((88 + Math.random() * 8) * 100) / 100);
-  const healthScore = isHealthy ? 96 : (visualData?.healthScore || 52);
-  const affectedArea = isHealthy ? '2%' : `${visualData?.affectedPct || 28}%`;
-  
-  let severity = 'Low';
-  let healthRating = 'Healthy';
-  if (healthScore < 50) {
-    severity = 'High';
-    healthRating = 'Poor';
-  } else if (healthScore < 80) {
-    severity = 'Moderate';
-    healthRating = 'Moderate';
-  } else {
-    severity = 'Low';
-    healthRating = 'Healthy';
-  }
-
   return {
     analysisId,
-    crop,
-    cropName: crop,
-    disease,
-    diseaseName: disease,
-    confidence,
-    healthScore,
-    healthRating,
-    severity,
-    affectedArea,
-    riskLevel: severity,
-    treatment: isHealthy 
-      ? 'No chemical treatment needed. Continue balanced soil health care.'
-      : 'Spray Tricyclazole 75% WP @ 0.6 g/L water or Isoprothiolane 40% EC @ 1.5 ml/L.',
-    medicine: isHealthy ? 'None required' : 'Tricyclazole 75% WP',
-    organicSolution: isHealthy 
-      ? 'Apply Neem Seed Kernel Extract (NSKE 5%) periodically as a preventive measure.'
-      : 'Apply 5% Neem Seed Kernel Extract (NSKE) or Pseudomonas fluorescens @ 10g/L.',
-    prevention: 'Maintain balanced Nitrogen fertilization and proper field drainage.',
-    immediatePrecautions: isHealthy ? 'Routine field inspection.' : 'Prune severely damaged foliage immediately and avoid evening sprinkler irrigation.',
-    futurePrevention: 'Use certified disease-resistant seed varieties and rotate crops seasonally.',
-    recoveryTimeline: isHealthy ? 'Immediate' : '7-10 Days',
-    nextScanReminder: 'In 5 Days',
-    symptoms: isHealthy ? 'Foliar tissues are green and free from lesions.' : 'Elliptical spindle-shaped leaf lesions with brownish borders.',
-    cause: isHealthy ? 'Normal physiological state.' : 'Fungal pathogen Magnaporthe oryzae under high relative humidity.',
-    recoveryAdvice: 'Monitor recovery after 5 days of treatment application.',
-    modelVersion: 'v1 (AgriMitra AI Engine)',
-    predictionTime: 0.2,
+    crop: 'Analysis Unavailable',
+    cropName: 'Analysis Unavailable',
+    disease: 'AI Engine Offline',
+    diseaseName: 'AI Engine Offline',
+    confidence: 0,
+    healthScore: 0,
+    healthRating: 'Unknown',
+    severity: 'Unknown',
+    affectedArea: 'Unknown',
+    riskLevel: 'Unknown',
+    treatment: 'The AI prediction engines are currently unreachable. Please check your connection and try scanning again later.',
+    medicine: 'Unavailable',
+    organicSolution: 'Unavailable',
+    prevention: 'Unavailable',
+    immediatePrecautions: 'Unavailable',
+    futurePrevention: 'Unavailable',
+    recoveryTimeline: 'Unavailable',
+    nextScanReminder: 'Scan again later',
+    symptoms: 'Could not analyze leaf due to network or service error.',
+    cause: 'Connection to ML servers failed.',
+    recoveryAdvice: 'Please retry the analysis when services are restored.',
+    modelVersion: 'v1 (Fallback / Error)',
+    predictionTime: 0.1,
     createdAt: new Date().toISOString(),
-    top3: [
-      { crop, disease, confidence },
-      { crop, disease: isHealthy ? 'Minor Nutrient Stress' : 'Brown Spot', confidence: Math.round((100 - confidence - 2) * 100) / 100 },
-      { crop, disease: 'Healthy Leaf', confidence: 2.0 }
-    ]
+    top3: []
   };
 };
 
