@@ -1,0 +1,11 @@
+{
+  "target_size": [
+    224,
+    224,
+    3
+  ],
+  "color_mode": "rgb",
+  "preprocessing_function": "tf.keras.applications.mobilenet_v2.preprocess_input",
+  "normalization_range": "[-1, 1]",
+  "architecture": "MobileNetV2"
+}

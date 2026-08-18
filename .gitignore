@@ -12,12 +12,16 @@ node_modules/
 dist/
 dist-ssr/
 datasets/
+data/
+crop datas/
 
 # Environment Variables
 .env
 .env.local
 .env.*.local
 .env.*
+backend/.env
+backend/.env.*
 
 # Keep the example
 !.env.example
@@ -32,7 +36,6 @@ datasets/
 *.njsproj
 *.sln
 *.sw?
-datasets/
 backend/training/
 backend/scripts/download_datasets.py
 backend/scripts/prepare_and_train_v2.py
@@ -41,6 +44,7 @@ backend/test_api_endpoints.py
 
 __pycache__/
 *.pyc
+*/__pycache__/*
+*/*/__pycache__/*
 test_lfs.pkl
 .vercel
-.env*

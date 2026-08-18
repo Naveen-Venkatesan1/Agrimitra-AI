@@ -866,5 +866,303 @@
         "Following treatment protocol"
       ]
     }
+  },
+  "Tomato___Early_Blight": {
+    "Symptoms": "Dark brown concentric target-like rings on mature lower leaves with yellow halos.",
+    "Cause": "Alternaria solani fungal spores spread via wind, splashing rain, and residues.",
+    "Biological Treatment": "Foliar spray of Bacillus subtilis (2g/L) or Trichoderma harzianum (5g/L).",
+    "Chemical Treatment": "Apply Chlorothalonil 75% WP @ 2g/L or Mancozeb 75% WP @ 2.5g/L.",
+    "Organic Recommendation": "Apply copper oxychloride (3g/L) mixed with 1% milk solution or neem oil.",
+    "Prevention Tips": "Mulch soil around base with straw to stop soil splash.",
+    "Immediate Precautions": "Prune and burn infected bottom leaves immediately.",
+    "Future Prevention": "Plant resistant hybrids and maintain strict Solanaceae crop rotation.",
+    "Recovery Advice": "Expect leaf recovery within 10-14 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 14,
+      "conditions": [
+        "Optimal weather conditions",
+        "Following treatment protocol"
+      ]
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
+  },
+  "Corn_(maize)___Aphid": {
+    "Symptoms": "Clusters of small green/black aphids on tassels, whorls, and leaf undersides secreting sticky honeydew followed by sooty mold.",
+    "Cause": "Rhopalosiphum maidis (Corn leaf aphid) feeding on plant sap during dry, warm weather.",
+    "Biological Treatment": "Release Chrysoperla carnea (Green lacewings) @ 50,000/ha or spray Beauveria bassiana @ 5g/L.",
+    "Chemical Treatment": "Spray Imidacloprid 17.8% SL @ 0.5mL/L or Thiamethoxam 25% WG @ 0.3g/L water.",
+    "Organic Recommendation": "Spray 5% Neem Seed Kernel Extract (NSKE) or potassium salt of fatty acids (insecticidal soap @ 5mL/L).",
+    "Prevention Tips": "Conserve natural predators like coccinellid ladybird beetles and avoid excessive nitrogen fertilization.",
+    "Immediate Precautions": "Spray clear water or soap solution on heavily colonized tassels.",
+    "Future Prevention": "Intercrop maize with cowpea or pulses to enhance beneficial predator populations.",
+    "Recovery Advice": "Infestation controlled within 3-5 days of systemic insecticide or biopesticide spray.",
+    "recovery_estimate": {
+      "minimum_days": 4,
+      "maximum_days": 7,
+      "conditions": [
+        "Targeted foliar spray",
+        "Predator conservation"
+      ]
+    },
+    "Cultural Management": "Practice timely sowing and eradicate weed hosts like Johnson grass around field borders."
+  },
+  "Corn_(maize)___Curvularia_leaf_spot": {
+    "Symptoms": "Small, circular to oval chlorotic spots with brown centers and distinct yellowish halos on maize leaves.",
+    "Cause": "Curvularia lunata fungus favored by warm (28-32\u00b0C) humid weather with frequent rainfall.",
+    "Biological Treatment": "Apply Trichoderma harzianum @ 5g/L or Pseudomonas fluorescens @ 5g/L foliar spray.",
+    "Chemical Treatment": "Spray Mancozeb 75% WP @ 2g/L or Propiconazole 25% EC @ 1mL/L at first symptom appearance.",
+    "Organic Recommendation": "Foliar spray of 20% cow urine solution or copper hydroxide 77% WP @ 2g/L.",
+    "Prevention Tips": "Collect and destroy post-harvest maize stover and practice 2-year crop rotation.",
+    "Immediate Precautions": "Avoid sprinkler irrigation during late evenings.",
+    "Future Prevention": "Sow certified disease-free seeds treated with Thiram @ 3g/kg seed.",
+    "Recovery Advice": "New foliage emerges clean within 7-10 days following fungicide application.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Dry weather",
+        "Fungicide adherence"
+      ]
+    },
+    "Cultural Management": "Ensure balanced NPK fertilization (120:60:40 kg/ha) with adequate potash."
+  },
+  "Corn_(maize)___FAW_symptoms": {
+    "Symptoms": "Ragged shot-hole perforations on leaves, heavy window-pane feeding, and coarse sawdust-like frass accumulated in the whorl.",
+    "Cause": "Spodoptera frugiperda (Fall Armyworm) larval feeding on leaf whorls and young tassels.",
+    "Biological Treatment": "Apply Bacillus thuringiensis (Bt) kurstaki @ 2g/L or Metarhizium anisopliae @ 5g/L in central whorl.",
+    "Chemical Treatment": "Spray Chlorantraniliprole 18.5% SC @ 0.4mL/L or Emamectin benzoate 5% SG @ 0.4g/L directed into the whorl.",
+    "Organic Recommendation": "Whorl application of dry sand + lime (9:1 ratio) or 5% Neem cake powder.",
+    "Prevention Tips": "Install FAW pheromone traps @ 12 traps/ha for early adult monitoring.",
+    "Immediate Precautions": "Handpick and destroy egg masses and early-instar larvae in smallholder plots.",
+    "Future Prevention": "Adopt push-pull technology by intercropping with Desmodium and planting Napier grass on borders.",
+    "Recovery Advice": "Whorl feeding halts within 48-72 hours of targeted spray; fresh heart leaves emerge healthy.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 8,
+      "conditions": [
+        "Whorl directed spray",
+        "Pheromone trapping"
+      ]
+    },
+    "Cultural Management": "Synchronize community sowing and avoid staggered plantings across neighboring plots."
+  },
+  "Corn_(maize)___Fall_armyworm": {
+    "Symptoms": "Visible caterpillars with inverted Y mark on head and 4 square dots on 8th abdominal segment feeding inside the central whorl.",
+    "Cause": "Spodoptera frugiperda larvae destructive to all maize growth stages.",
+    "Biological Treatment": "Release egg parasitoids Trichogramma pretiosum @ 50,000/ha or spray Spodoptera frugiperda NPV (SfNPV) @ 2mL/L.",
+    "Chemical Treatment": "Apply Spinetoram 11.7% SC @ 0.5mL/L or Flubendiamide 39.35% SC @ 0.3mL/L targeted into whorls.",
+    "Organic Recommendation": "Spray Azadirachtin 10000 ppm @ 1.5mL/L or Bacillus thuringiensis var. aizawai @ 2g/L.",
+    "Prevention Tips": "Set up solar light traps @ 1/acre to trap and kill night-flying adult moths.",
+    "Immediate Precautions": "Direct knapsack spray nozzle directly into the central funnel/whorl of each plant.",
+    "Future Prevention": "Apply seed treatment with Cyantraniliprole 19.8% + Thiamethoxam 19.8% FS @ 6mL/kg seed.",
+    "Recovery Advice": "Larval mortality achieved within 24-48 hours; crop vigor rebounds in 7 days.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 9,
+      "conditions": [
+        "Correct nozzle targeting",
+        "Timely intervention"
+      ]
+    },
+    "Cultural Management": "Maintain deep summer ploughing to expose pupae to predatory birds and solar heat."
+  },
+  "Corn_(maize)___Maydis_leaf_blight": {
+    "Symptoms": "Small diamond-shaped or rectangular lesions (1-3 cm) with buff centers and reddish-brown borders between leaf veins.",
+    "Cause": "Bipolaris maydis (Helminthosporium maydis) fungal pathogen favored by warm (25-30\u00b0C) damp conditions.",
+    "Biological Treatment": "Foliar spray of Pseudomonas fluorescens @ 10g/L or Trichoderma viride @ 5g/L.",
+    "Chemical Treatment": "Spray Azoxystrobin 18.2% + Difenoconazole 11.4% SC @ 1mL/L or Mancozeb 75% WP @ 2.5g/L.",
+    "Organic Recommendation": "Foliar application of Copper Oxychloride 50% WP @ 2.5g/L combined with 2% neem oil.",
+    "Prevention Tips": "Bury crop residue deeply through moldboard ploughing after harvest.",
+    "Immediate Precautions": "Strip lower severely infected leaves to reduce secondary spore dispersal.",
+    "Future Prevention": "Cultivate resistant maize hybrids like Bio 9681, PAC 740, or HQPM 1.",
+    "Recovery Advice": "Lesion expansion ceases within 6-8 days after systemic fungicide application.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 12,
+      "conditions": [
+        "Systemic fungicide application",
+        "Dry canopy"
+      ]
+    },
+    "Cultural Management": "Maintain balanced plant nutrition and avoid excessive plant density."
+  },
+  "Corn_(maize)___Sorghum_downy_mildew": {
+    "Symptoms": "Vivid chlorotic yellow striping on leaves, stunted growth, downy white fungal growth on leaf undersides, and crazy top tassel deformation.",
+    "Cause": "Peronosclerospora sorghi oomycete pathogen spread by soil-borne oospores and airborne conidia.",
+    "Biological Treatment": "Seed treatment with Pseudomonas fluorescens @ 10g/kg seed + foliar spray @ 5g/L.",
+    "Chemical Treatment": "Spray Metalaxyl-M 4% + Mancozeb 64% WP @ 2.5g/L or Dimethomorph 50% WP @ 1g/L.",
+    "Organic Recommendation": "Foliar spray of Bio-sulfur @ 3g/L or Fermented Panchagavya 3% spray.",
+    "Prevention Tips": "Avoid planting maize immediately after sorghum in endemic regions.",
+    "Immediate Precautions": "Rogue out and burn all systemically infected stunted plants immediately to halt conidial spread.",
+    "Future Prevention": "Treat seeds with Metalaxyl 35% WS @ 4g/kg seed prior to planting.",
+    "Recovery Advice": "Non-systemic secondary infections subside within 7 days; rogue systemic cases.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 10,
+      "conditions": [
+        "Roguing infected plants",
+        "Metalaxyl application"
+      ]
+    },
+    "Cultural Management": "Ensure good drainage and sow early with the onset of monsoon."
+  },
+  "Maize___healthy": {
+    "Symptoms": "Leaves are uniformly vibrant green, upright, free of spots, frass, or discoloration, showing strong vigorous vegetative growth.",
+    "Cause": "None. Optimal agronomic health and balanced nutrient uptake.",
+    "Biological Treatment": "Apply VAM (Vesicular Arbuscular Mycorrhiza) or Azospirillum biofertilizers for root health.",
+    "Chemical Treatment": "No chemical treatment required.",
+    "Organic Recommendation": "Foliar spray of 3% Panchagavya or seaweed extract @ 2mL/L for enhanced photosynthetic vigor.",
+    "Prevention Tips": "Maintain scheduled irrigation at knee-high, tasseling, and silking stages.",
+    "Immediate Precautions": "Monitor field weekly for early pest sightings like Fall Armyworm.",
+    "Future Prevention": "Continue recommended NPK schedule (120:60:40 kg/ha) with zinc sulfate @ 25 kg/ha.",
+    "Recovery Advice": "Crop is completely healthy. Continue standard agronomic practices.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    },
+    "Cultural Management": "Maintain clean field bunds, weed-free status, and proper earthing up at 30-35 DAS."
+  },
+  "Rice___False_smut": {
+    "Symptoms": "Individual rice grains in the panicle transform into large velvety yellowish-green or orange-green spore balls (smut balls).",
+    "Cause": "Ustilaginoidea virens fungus favored by high relative humidity (>90%) and cloudy, drizzly weather during flowering.",
+    "Biological Treatment": "Foliar spray of Trichoderma viride @ 5g/L during boot leaf stage.",
+    "Chemical Treatment": "Spray Propiconazole 25% EC @ 1mL/L or Trifloxystrobin 25% + Tebuconazole 50% WG @ 0.4g/L at boot-leaf emergence.",
+    "Organic Recommendation": "Foliar application of Copper Hydroxide 77% WP @ 2g/L or 5% Panchagavya spray.",
+    "Prevention Tips": "Avoid heavy nitrogen application, especially during panicle initiation and flowering stages.",
+    "Immediate Precautions": "Collect and discard smutted panicles in polybags before threshing to prevent soil contamination.",
+    "Future Prevention": "Perform seed treatment with Thiram 75% WP @ 3g/kg seed and hot water treatment at 52\u00b0C for 10 min.",
+    "Recovery Advice": "Preventive sprays at boot leaf stage protect uninfected panicles completely.",
+    "recovery_estimate": {
+      "minimum_days": 8,
+      "maximum_days": 14,
+      "conditions": [
+        "Boot leaf preventive spray",
+        "Nitrogen regulation"
+      ]
+    },
+    "Cultural Management": "Maintain moderate plant spacing and manage field bund weeds."
+  },
+  "Rice___Leaf_folder": {
+    "Symptoms": "Leaves folded longitudinally with white transparent longitudinal streaks where caterpillars have scraped green chlorophyll.",
+    "Cause": "Cnaphalocrocis medinalis (Rice leaf folder) larvae spinning silk to roll leaf blades.",
+    "Biological Treatment": "Release egg parasitoid Trichogramma chilonis @ 100,000/ha or spray Bacillus thuringiensis @ 2g/L.",
+    "Chemical Treatment": "Spray Chlorantraniliprole 18.5% SC @ 0.3mL/L or Flubendiamide 39.35% SC @ 0.25mL/L.",
+    "Organic Recommendation": "Spray 5% Neem Seed Kernel Extract (NSKE) or Azadirachtin 10000 ppm @ 2mL/L.",
+    "Prevention Tips": "Avoid shady over-fertilized field conditions and install light traps to attract adult moths.",
+    "Immediate Precautions": "Pass a thorn branch or coir rope across the crop canopy to dislodge caterpillars before spraying.",
+    "Future Prevention": "Avoid excessive use of pyrethroids that cause leaf folder resurgence.",
+    "Recovery Advice": "Larvae eliminated in 48 hours; crop canopy regains green biomass in 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 5,
+      "maximum_days": 8,
+      "conditions": [
+        "Canopy spray",
+        "Biocontrol release"
+      ]
+    },
+    "Cultural Management": "Maintain wide border rows and practice alternate wetting and drying."
+  },
+  "Rice___Leaf_sheath_blight": {
+    "Symptoms": "Oval to irregular greenish-gray water-soaked spots with dark brown margins on leaf sheaths near the waterline, spreading upward.",
+    "Cause": "Rhizoctonia solani fungus thriving in high humidity, warm temperature (28-32\u00b0C), and dense canopies.",
+    "Biological Treatment": "Foliar spray of Pseudomonas fluorescens @ 10g/L or Trichoderma viride @ 5g/L at tillering.",
+    "Chemical Treatment": "Spray Hexaconazole 5% EC @ 2mL/L, Validamycin 3% L @ 2.5mL/L, or Azoxystrobin 18.2% + Difenoconazole 11.4% SC @ 1mL/L.",
+    "Organic Recommendation": "Spray 10% cow dung slurry supernatant or fermented butter milk (5%) with neem oil.",
+    "Prevention Tips": "Avoid high planting density (maintain 20x15 cm spacing) and split nitrogen doses.",
+    "Immediate Precautions": "Drain field water for 48 hours and prune lower infected sheaths if practical.",
+    "Future Prevention": "Treat nursery soil with Trichoderma-enriched compost @ 50 kg/ha.",
+    "Recovery Advice": "Upward lesion progression ceases within 5-7 days after systemic triazole spray.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 12,
+      "conditions": [
+        "Systemic fungicide application",
+        "Water drainage"
+      ]
+    },
+    "Cultural Management": "Clean field bunds of weed hosts like Echinochloa colona."
+  },
+  "Rice___Rice_skipper": {
+    "Symptoms": "Defoliated leaf margins with rolled leaf tubes containing stout green caterpillars with dark reddish-brown capsule heads.",
+    "Cause": "Parnara mathias (Rice skipper) butterfly larvae feeding on leaf margins.",
+    "Biological Treatment": "Release egg parasitoid Trichogramma spp. @ 50,000/ha or spray Beauveria bassiana @ 5g/L.",
+    "Chemical Treatment": "Spray Chlorpyrifos 20% EC @ 2mL/L or Quinalphos 25% EC @ 2mL/L water.",
+    "Organic Recommendation": "Spray 5% NSKE (Neem Seed Kernel Extract) with 0.5mL/L sticker.",
+    "Prevention Tips": "Conserve natural spider and wasp parasitoid populations in the paddy ecosystem.",
+    "Immediate Precautions": "Manually unroll leaf cases and destroy caterpillars in smallholder plots.",
+    "Future Prevention": "Keep paddy bunds free of wild grass host plants.",
+    "Recovery Advice": "Infestation controlled in 3-5 days; unaffected tillers compensate foliage rapidly.",
+    "recovery_estimate": {
+      "minimum_days": 4,
+      "maximum_days": 7,
+      "conditions": [
+        "Targeted spray",
+        "Canopy monitoring"
+      ]
+    },
+    "Cultural Management": "Practice synchronous planting in the contiguous farming zone."
+  },
+  "Rice___White_stem_borer": {
+    "Symptoms": "Dead hearts (drying of central tiller shoot) in vegetative stage and white heads (empty, chaffy erect panicles) at reproductive stage.",
+    "Cause": "Scirpophaga innotata (White stem borer) larvae boring into the base of the rice stem.",
+    "Biological Treatment": "Release Trichogramma japonicum @ 100,000/ha weekly from 30 days after transplanting.",
+    "Chemical Treatment": "Apply Cartap hydrochloride 4% G @ 18-20 kg/ha or spray Fipronil 5% SC @ 2mL/L.",
+    "Organic Recommendation": "Install pheromone traps @ 20 traps/ha for mass trapping of male moths.",
+    "Prevention Tips": "Clip seedling leaf tips before transplanting to remove egg masses.",
+    "Immediate Precautions": "Maintain 5-7 cm standing water in field when applying granular insecticides.",
+    "Future Prevention": "Plough stubbles immediately after harvest and submerge fields to kill overwintering larvae.",
+    "Recovery Advice": "New tillers develop to compensate vegetative dead hearts within 10-14 days.",
+    "recovery_estimate": {
+      "minimum_days": 10,
+      "maximum_days": 14,
+      "conditions": [
+        "Granular application",
+        "Pheromone trapping"
+      ]
+    },
+    "Cultural Management": "Harvest crop close to ground level to reduce larval shelter in stubbles."
+  },
+  "Rice___Yellow_stem_borer": {
+    "Symptoms": "Central shoot drying (dead heart) during vegetative stage and completely white, unfilled erect panicles (white ears) during grain filling.",
+    "Cause": "Scirpophaga incertulas (Yellow stem borer) monophagous pest boring into vascular cylinders of stems.",
+    "Biological Treatment": "Release egg parasitoid Trichogramma japonicum @ 100,000/ha 3 times at 10-day intervals.",
+    "Chemical Treatment": "Apply Chlorantraniliprole 0.4% G @ 10 kg/ha or spray Chlorantraniliprole 18.5% SC @ 0.3mL/L.",
+    "Organic Recommendation": "Apply 5% Neem cake in soil during transplanting and spray Azadirachtin 10000 ppm @ 2mL/L.",
+    "Prevention Tips": "Set up Yellow stem borer sex pheromone traps (Scirpo-lure) @ 12 traps/ha.",
+    "Immediate Precautions": "Clip seedling tip (top 2 cm) prior to transplanting to discard egg masses.",
+    "Future Prevention": "Destroy post-harvest rice stubbles by deep tractor disc harrowing.",
+    "Recovery Advice": "Dead heart damage arrested; compensatory tillering initiated within 7-10 days.",
+    "recovery_estimate": {
+      "minimum_days": 7,
+      "maximum_days": 12,
+      "conditions": [
+        "Pheromone monitoring",
+        "Granular/foliar treatment"
+      ]
+    },
+    "Cultural Management": "Avoid planting highly susceptible ultra-dense cultivars in endemic borer zones."
+  },
+  "Rice___healthy": {
+    "Symptoms": "Lush green, erect foliage with healthy tillering, clean golden panicles, and no stem discoloration or leaf spotting.",
+    "Cause": "None. Optimal agronomic health and balanced nutrient uptake.",
+    "Biological Treatment": "Apply Azospirillum and Phosphobacteria biofertilizers @ 2 kg/ha in root zone.",
+    "Chemical Treatment": "No chemical treatment required.",
+    "Organic Recommendation": "Apply vermicompost @ 2 t/ha and spray 3% Panchagavya at panicle initiation.",
+    "Prevention Tips": "Follow Alternate Wetting and Drying (AWD) irrigation protocol to save water and prevent root rot.",
+    "Immediate Precautions": "Maintain routine scouting for early signs of leaf folder or stem borer.",
+    "Future Prevention": "Ensure balanced NPK (120:40:40 kg/ha) with Zinc Sulfate @ 25 kg/ha basal application.",
+    "Recovery Advice": "Crop is completely healthy. Continue standard agronomic practices.",
+    "recovery_estimate": {
+      "minimum_days": 0,
+      "maximum_days": 0,
+      "conditions": [
+        "Plant is healthy"
+      ]
+    },
+    "Cultural Management": "Keep field levees and irrigation channels clean and weed-free."
   }
 }

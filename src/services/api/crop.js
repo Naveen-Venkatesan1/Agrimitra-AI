@@ -124,7 +124,7 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
     return { success: true, recommendations: fallbackRecs };
   },
 
-  // Disease Detection AI (Strictly FastAPI ML Backend)
+  // Disease Detection AI (Backend Adapter)
   async analyzeCropDisease(file, uid = null) {
     const analysisId = 'analysis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
@@ -134,25 +134,18 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
-      // Phase 3: Verify health endpoint first to isolate network/offline errors
-      try {
-        const healthCheck = await fetch(`${API_BASE_URL}/health`, { method: 'GET' });
-        if (!healthCheck.ok) {
-          throw new Error('Backend health check failed');
-        }
-      } catch (healthErr) {
-        console.warn("Backend /health unreachable:", healthErr.message);
-        return { success: false, error: "AI Engine Offline: Could not reach the ML backend." };
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/predict-disease`, {
+      const response = await fetch(`${API_BASE_URL}/api/crop-intelligence/analyze`, {
         method: 'POST',
         headers: { 'X-Analysis-ID': analysisId },
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error(`ML Engine HTTP error: ${response.status}`);
+        if (response.status === 503) {
+           return { success: false, error: "AI Engine Offline: Could not reach the Plant.id API backend." };
+        }
+        const errData = await response.json().catch(() => ({}));
+        return { success: false, error: errData.error || errData.message || `API error: ${response.status}` };
       }
 
       const data = await response.json();
@@ -168,71 +161,10 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
       }
 
       if (data.success !== false) {
-        let detectedCrop = data.crop || 'Unknown Crop';
-        let detectedDisease = data.disease || 'Unknown Disease';
-        
-        if (!data.crop && data.prediction) {
-          if (data.prediction.includes('___')) {
-            const parts = data.prediction.split('___');
-            detectedCrop = parts[0].replace(/_/g, ' ');
-            detectedDisease = parts[1].replace(/_/g, ' ');
-          } else {
-            detectedDisease = data.prediction;
-          }
-        }
-
-        const top3Data = data.top_predictions || data.top_3_predictions || {};
-        const top3Formatted = Object.entries(top3Data).map(([key, val]) => {
-          let c = key, d = key;
-          if (key.includes('___')) {
-            const p = key.split('___');
-            c = p[0].replace(/_/g, ' ');
-            d = p[1].replace(/_/g, ' ');
-          }
-          return { crop: c, disease: d, confidence: val };
-        });
-
-        const recs = data.recommendations || {};
-
         const diagnosis = {
-          analysisId,
-          crop: detectedCrop,
-          cropName: detectedCrop,
-          disease: detectedDisease,
-          diseaseName: detectedDisease,
-          diseaseCategory: data.disease_category || 'Unknown',
-          confidence: data.confidence,
-          healthScore: data.health_score || 85,
-          healthRating: data.health_rating || (detectedDisease.toLowerCase().includes('healthy') ? 'Healthy' : 'Poor'),
-          severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
-          affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `25-40%`),
-          riskLevel: data.risk_level || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
-          
-          // Strict real recommendations from backend
-          biologicalTreatment: data.biological_treatment || [],
-          chemicalTreatment: data.chemical_treatment || [],
-          culturalManagement: data.cultural_management || [],
-          immediatePrecautions: data.immediate_precautions || [],
-          prevention: data.prevention || [],
-          recommendationSource: data.recommendation_source || 'Unknown',
-          diagnosisSource: data.diagnosis_source || 'Local ML',
-          
-          treatment: data.chemical_treatment ? data.chemical_treatment.join(' ') : (recs['Chemical Treatment'] || 'Consult agricultural expert'),
-          medicine: recs['Chemical Treatment'] || 'Fungicide treatment',
-          organicSolution: data.biological_treatment ? data.biological_treatment.join(' ') : (recs['Organic Treatment'] || 'Neem spray'),
-          
-          futurePrevention: recs['Future Prevention'] || 'Use certified seeds',
-          recoveryTimeline: recs['Recovery Timeline'] || '7-10 Days',
-          nextScanReminder: recs['Next Scan Reminder'] || 'In 5 Days',
-          symptoms: recs['Symptoms'] || 'Foliar lesions',
-          cause: recs['Cause'] || 'Fungal/bacterial pathogen',
-          recoveryAdvice: recs['Recovery Advice'] || 'Monitor recovery progress',
-          modelVersion: data.model_version || 'v1 (MobileNetV2)',
-          predictionTime: data.prediction_time_sec || 0.5,
+          ...data,
           imageUrl: URL.createObjectURL(file),
-          createdAt: new Date().toISOString(),
-          top3: top3Formatted,
-          recovery_estimate: data.recovery_estimate || null
+          createdAt: new Date().toISOString()
         };
 
         if (uid) {
@@ -254,8 +186,8 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
       return { success: false, error: data.error || 'Analysis failed on backend' };
       
     } catch (apiErr) {
-      console.warn("FastAPI predict-disease network error:", apiErr.message);
-      return { success: false, error: "AI Engine Offline: Could not reach the ML backend." };
+      console.warn("Backend API network error:", apiErr.message);
+      return { success: false, error: "Backend Engine Offline: Could not reach the server." };
     }
   },
 
