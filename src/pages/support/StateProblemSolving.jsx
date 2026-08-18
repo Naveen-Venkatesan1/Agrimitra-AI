@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Headphones, MapPin, Phone, Mail, CheckCircle2, Send } from 'lucide-react';
 import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -24,6 +25,9 @@ export const StateProblemSolving = () => {
         <span className="text-xs font-semibold text-agri-light uppercase tracking-wider">Expert Support</span>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-agri-dark mt-0.5">State-wise Problem Solving</h1>
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Escalate unresolved field issues directly to state agricultural departments & KVK experts</p>
+        <div className="mt-2">
+          <Badge variant="warning" size="sm">Notice: Tickets are currently saved to local records and not actively routed to human officers.</Badge>
+        </div>
       </div>
 
       {submitted && (

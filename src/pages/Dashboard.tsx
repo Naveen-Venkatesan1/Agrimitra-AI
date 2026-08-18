@@ -321,26 +321,19 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Rainfall Chart */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <span className="text-[11px] font-bold text-gray-900 block mb-1">Rainfall <span className="text-gray-500 font-normal">({selectedDistrict}, {selectedState})</span></span>
-                <div className="flex items-end gap-2 mb-4">
-                  <span className="text-[24px] font-bold text-gray-900 leading-none">125</span>
-                  <span className="text-[11px] text-gray-500 font-medium mb-1">mm<br/>Total Rainfall</span>
-                </div>
-                {/* Bar chart visual */}
-                <div className="h-16 flex items-end justify-between gap-1.5">
-                  {[
-                    { d: 'Mon', h: 30, l: 25 }, { d: 'Tue', h: 40, l: 15 }, 
-                    { d: 'Wed', h: 50, l: 18 }, { d: 'Thu', h: 20, l: 8 },
-                    { d: 'Fri', h: 60, l: 28 }, { d: 'Sat', h: 35, l: 12 }, 
-                    { d: 'Sun', h: 45, l: 24 }
-                  ].map((col, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[8px] font-bold text-gray-600">{col.l}</span>
-                      <div className="w-full bg-[#0B4D2F] rounded-t-sm" style={{ height: `${col.h}px` }} />
-                      <span className="text-[9px] text-gray-400">{col.d}</span>
+              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-gray-900 block mb-1">Rainfall <span className="text-gray-500 font-normal">({selectedDistrict}, {selectedState})</span></span>
+                  {weather?.rainfall ? (
+                    <div className="flex items-end gap-2 mb-4">
+                      <span className="text-[24px] font-bold text-gray-900 leading-none">{weather.rainfall}</span>
+                      <span className="text-[11px] text-gray-500 font-medium mb-1">mm<br/>Expected Rainfall</span>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="py-4 text-center">
+                      <span className="text-xs font-medium text-gray-500">Historical rainfall data unavailable</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -348,16 +341,16 @@ export const Dashboard: React.FC = () => {
               <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <span className="text-[11px] font-bold text-gray-900 block mb-1">Crop Growth Stage</span>
-                  <span className="text-[14px] font-bold text-[#0B4D2F] block mt-1">Vegetative Stage</span>
-                  <span className="text-[10px] text-gray-500 font-medium mt-1 block">28% Completed</span>
+                  <span className="text-[14px] font-bold text-gray-400 block mt-1">Awaiting Sowing Data</span>
+                  <span className="text-[10px] text-gray-400 font-medium mt-1 block">Data unavailable</span>
                   <div className="w-full h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
-                    <div className="h-full bg-[#0B4D2F] w-[28%] rounded-full" />
+                    <div className="h-full bg-gray-300 w-[0%] rounded-full" />
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-100 text-right">
-                   <span className="text-[10px] font-bold text-[#0B4D2F] cursor-pointer">View Details <ArrowRight className="w-2.5 h-2.5 inline" /></span>
+                   <span className="text-[10px] font-bold text-gray-400 cursor-not-allowed">Update Sowing Date <ArrowRight className="w-2.5 h-2.5 inline" /></span>
                 </div>
-                <Sprout className="absolute bottom-2 right-4 w-12 h-12 text-emerald-50 opacity-50" />
+                <Sprout className="absolute bottom-2 right-4 w-12 h-12 text-gray-100 opacity-50" />
               </div>
 
               {/* Recent Activities */}
@@ -365,31 +358,22 @@ export const Dashboard: React.FC = () => {
                 <div>
                   <span className="text-[11px] font-bold text-gray-900 block mb-3">Recent Activities</span>
                   <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1" />
-                      <div>
-                        <p className="text-[11px] font-medium text-gray-800 leading-tight">Irrigation scheduled today 6:00 AM</p>
-                        <p className="text-[9px] text-gray-400 mt-0.5">2h ago</p>
+                    {filteredAlerts && filteredAlerts.length > 0 ? (
+                      filteredAlerts.slice(0, 3).map((alert: any, idx: number) => (
+                        <div key={alert.id || alert.title || idx} className="flex items-start gap-2">
+                          <div className={`w-2 h-2 rounded-full mt-1 ${alert.category === 'disease' ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                          <div>
+                            <p className="text-[11px] font-medium text-gray-800 leading-tight">{alert.title}</p>
+                            <p className="text-[9px] text-gray-400 mt-0.5">{alert.time || 'Recently'}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-2">
+                        <span className="text-[10px] text-gray-500 font-medium">No recent activities to display.</span>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1" />
-                      <div>
-                        <p className="text-[11px] font-medium text-gray-800 leading-tight">Leaf blast detected in Paddy field</p>
-                        <p className="text-[9px] text-gray-400 mt-0.5">5h ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-sky-500 mt-1" />
-                      <div>
-                        <p className="text-[11px] font-medium text-gray-800 leading-tight">Weather alert: Moderate rain expected in {selectedDistrict}</p>
-                        <p className="text-[9px] text-gray-400 mt-0.5">1d ago</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                </div>
-                <div className="mt-2 pt-2 text-right">
-                  <span className="text-[10px] font-bold text-[#0B4D2F] cursor-pointer">View All Activities <ArrowRight className="w-2.5 h-2.5 inline" /></span>
                 </div>
               </div>
 

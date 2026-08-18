@@ -26,6 +26,7 @@ import SoilNutrientMapping from '../pages/analytics/SoilNutrientMapping';
 import Weather from '../pages/Weather';
 import SmartIrrigation from '../pages/SmartIrrigation';
 import GovernmentSchemes from '../pages/GovernmentSchemes';
+import MarketIntelligence from '../pages/MarketIntelligence';
 
 import { useAppStore } from '../store/useAppStore';
 
@@ -134,6 +135,7 @@ export const AppRouter = () => {
           <Route path="/weather" element={<Weather />} />
           <Route path="/irrigation" element={<SmartIrrigation />} />
           <Route path="/government-schemes" element={<GovernmentSchemes />} />
+          <Route path="/market-intelligence" element={<MarketIntelligence />} />
 
           {/* Core Modules */}
           <Route path="/profile" element={<Profile />} />

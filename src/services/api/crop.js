@@ -131,40 +131,7 @@ const analyzeLeafPixels = (file) => new Promise((resolve) => {
   img.src = url;
 });
 
-// Fallback Leaf Disease Diagnosis Generator with Dynamic Health Score
-const generateFallbackDiagnosis = (fileName = '', analysisId = '', visualData = null) => {
-  // REMOVED: Filename-based fake diagnosis logic.
-  // The system should not fabricate a disease prediction if all AI engines are offline.
-  
-  return {
-    analysisId,
-    crop: 'Analysis Unavailable',
-    cropName: 'Analysis Unavailable',
-    disease: 'AI Engine Offline',
-    diseaseName: 'AI Engine Offline',
-    confidence: 0,
-    healthScore: 0,
-    healthRating: 'Unknown',
-    severity: 'Unknown',
-    affectedArea: 'Unknown',
-    riskLevel: 'Unknown',
-    treatment: 'The AI prediction engines are currently unreachable. Please check your connection and try scanning again later.',
-    medicine: 'Unavailable',
-    organicSolution: 'Unavailable',
-    prevention: 'Unavailable',
-    immediatePrecautions: 'Unavailable',
-    futurePrevention: 'Unavailable',
-    recoveryTimeline: 'Unavailable',
-    nextScanReminder: 'Scan again later',
-    symptoms: 'Could not analyze leaf due to network or service error.',
-    cause: 'Connection to ML servers failed.',
-    recoveryAdvice: 'Please retry the analysis when services are restored.',
-    modelVersion: 'v1 (Fallback / Error)',
-    predictionTime: 0.1,
-    createdAt: new Date().toISOString(),
-    top3: []
-  };
-};
+
 
 export const cropApi = {
   // Dynamic Crop Recommendation Engine with Multi-Tier Fallback
@@ -233,12 +200,11 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
     return { success: true, recommendations: fallbackRecs };
   },
 
-  // Disease Detection AI + Multi-Tier Failproof Engine
+  // Disease Detection AI (Strictly FastAPI ML Backend)
   async analyzeCropDisease(file, uid = null) {
     const analysisId = 'analysis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const visualData = await analyzeLeafPixels(file);
 
-    // Tier 1: Try FastAPI Backend
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -250,182 +216,104 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
         body: formData
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success !== false && !data.is_low_confidence) {
-          let detectedCrop = data.crop || 'Unknown Crop';
-          let detectedDisease = data.disease || 'Unknown Disease';
-          
-          if (!data.crop && data.prediction) {
-            if (data.prediction.includes('___')) {
-              const parts = data.prediction.split('___');
-              detectedCrop = parts[0].replace(/_/g, ' ');
-              detectedDisease = parts[1].replace(/_/g, ' ');
-            } else {
-              detectedDisease = data.prediction;
-            }
-          }
-
-          const top3Data = data.top_predictions || data.top_3_predictions || {};
-          const top3Formatted = Object.entries(top3Data).map(([key, val]) => {
-            let c = key, d = key;
-            if (key.includes('___')) {
-              const p = key.split('___');
-              c = p[0].replace(/_/g, ' ');
-              d = p[1].replace(/_/g, ' ');
-            }
-            return { crop: c, disease: d, confidence: val };
-          });
-
-          const recs = data.recommendations || {};
-
-          const diagnosis = {
-            analysisId,
-            crop: detectedCrop,
-            cropName: detectedCrop,
-            disease: detectedDisease,
-            diseaseName: detectedDisease,
-            confidence: data.confidence,
-            healthScore: data.health_score || visualData.healthScore,
-            healthRating: data.health_rating || (detectedDisease.toLowerCase().includes('healthy') ? 'Healthy' : (visualData.healthScore >= 50 ? 'Moderate' : 'Poor')),
-            severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : (visualData.healthScore >= 50 ? 'Moderate' : 'High')),
-            affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `${visualData.affectedPct}%`),
-            riskLevel: data.risk_level || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
-            treatment: data.chemical_treatment ? data.chemical_treatment.join(' ') : (recs['Chemical Treatment'] || 'Consult agricultural expert'),
-            medicine: recs['Chemical Treatment'] || 'Fungicide treatment',
-            organicSolution: data.biological_treatment ? data.biological_treatment.join(' ') : (recs['Organic Treatment'] || 'Neem spray'),
-            prevention: data.prevention ? data.prevention.join(' ') : (recs['Prevention'] || 'Crop rotation'),
-            immediatePrecautions: data.immediate_precautions ? data.immediate_precautions.join(' ') : (recs['Immediate Precautions'] || 'Monitor leaves'),
-            futurePrevention: recs['Future Prevention'] || 'Use certified seeds',
-            recoveryTimeline: recs['Recovery Timeline'] || '7-10 Days',
-            nextScanReminder: recs['Next Scan Reminder'] || 'In 5 Days',
-            symptoms: recs['Symptoms'] || 'Foliar lesions',
-            cause: recs['Cause'] || 'Fungal/bacterial pathogen',
-            recoveryAdvice: recs['Recovery Advice'] || 'Monitor recovery progress',
-            modelVersion: data.model_version || 'v1 (MobileNetV2)',
-            predictionTime: data.prediction_time_sec || 0.5,
-            imageUrl: URL.createObjectURL(file),
-            createdAt: new Date().toISOString(),
-            top3: top3Formatted,
-            biologicalTreatment: data.biological_treatment || [],
-            chemicalTreatment: data.chemical_treatment || [],
-            recovery_estimate: data.recovery_estimate || null
-          };
-
-          if (uid) {
-            try {
-              await addDoc(collection(db, 'disease_history'), {
-                userId: uid,
-                ...diagnosis,
-                createdAt: serverTimestamp()
-              });
-            } catch (e) {
-              console.warn('Firestore disease save warning:', e);
-            }
-          }
-
-          return { success: true, diagnosis };
-        }
+      if (!response.ok) {
+        throw new Error(`ML Engine HTTP error: ${response.status}`);
       }
-    } catch (apiErr) {
-      console.warn("FastAPI predict-disease network error, shifting to Gemini Vision:", apiErr.message);
-    }
 
-    // Tier 2: Try Gemini 1.5 Flash Vision
-    try {
-      const base64Image = await fileToBase64(file);
-      const mimeType = file.type || 'image/jpeg';
-      const promptText = `Analyze this plant leaf image. Identify crop name, disease name (or Healthy), confidence percentage (0-100), health score (0-100), severity ("High", "Moderate", "Low"), organic solution, chemical treatment, immediate precautions, prevention steps, recovery timeline.
-Return STRICTLY JSON format with keys: "crop", "disease", "confidence", "healthScore", "severity", "organicSolution", "treatment", "immediatePrecautions", "prevention", "recoveryTimeline". Do not use markdown code blocks.`;
-
-      const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: promptText },
-              { inlineData: { mimeType, data: base64Image } }
-            ]
-          }]
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanJson);
-
-        if (parsed.crop || parsed.disease) {
-          const isHealthy = String(parsed.disease || '').toLowerCase().includes('healthy');
-          const finalHealthScore = parsed.healthScore || (isHealthy ? 95 : visualData.healthScore);
-          const diagnosis = {
-            analysisId,
-            crop: parsed.crop || 'Paddy (Rice)',
-            cropName: parsed.crop || 'Paddy (Rice)',
-            disease: parsed.disease || (isHealthy ? 'Paddy Healthy' : 'Leaf Disease'),
-            diseaseName: parsed.disease || (isHealthy ? 'Paddy Healthy' : 'Leaf Disease'),
-            confidence: parsed.confidence || visualData.confidence,
-            healthScore: finalHealthScore,
-            healthRating: finalHealthScore >= 80 ? 'Healthy' : (finalHealthScore >= 50 ? 'Moderate' : 'Poor'),
-            severity: parsed.severity || (isHealthy ? 'Low' : (finalHealthScore >= 50 ? 'Moderate' : 'High')),
-            affectedArea: isHealthy ? '2%' : `${visualData.affectedPct}%`,
-            riskLevel: parsed.severity || (isHealthy ? 'Low' : (finalHealthScore >= 50 ? 'Moderate' : 'High')),
-            treatment: parsed.treatment || 'Apply recommended systemic fungicide spray.',
-            medicine: parsed.treatment || 'Systemic Fungicide',
-            organicSolution: parsed.organicSolution || 'Apply 5% Neem Seed Kernel Extract (NSKE).',
-            prevention: parsed.prevention || 'Ensure proper drainage and balanced nitrogen application.',
-            immediatePrecautions: parsed.immediatePrecautions || 'Prune affected leaves immediately.',
-            futurePrevention: 'Use certified disease-resistant seeds.',
-            recoveryTimeline: parsed.recoveryTimeline || '7-10 Days',
-            nextScanReminder: 'In 5 Days',
-            symptoms: 'Foliar lesions observed on leaf sample.',
-            cause: 'Pathogenic infection in favorable microclimate.',
-            recoveryAdvice: 'Re-scan leaf after 5 days of treatment.',
-            modelVersion: 'v1 (Gemini 1.5 Flash Vision)',
-            predictionTime: 0.8,
-            imageUrl: URL.createObjectURL(file),
-            createdAt: new Date().toISOString(),
-            top3: [
-              { crop: parsed.crop || 'Paddy', disease: parsed.disease || 'Leaf Disease', confidence: parsed.confidence || visualData.confidence },
-              { crop: parsed.crop || 'Paddy', disease: 'Nutrient Deficiency', confidence: 5.0 },
-              { crop: parsed.crop || 'Paddy', disease: 'Healthy Leaf', confidence: 2.5 }
-            ]
-          };
-
-          if (uid) {
-            try {
-              await addDoc(collection(db, 'disease_history'), {
-                userId: uid,
-                ...diagnosis,
-                createdAt: serverTimestamp()
-              });
-            } catch (e) {}
-          }
-
-          return { success: true, diagnosis };
-        }
+      const data = await response.json();
+      
+      // Handle explicit low confidence response
+      if (data.is_low_confidence || data.status === 'low_confidence') {
+        return {
+          success: true,
+          isLowConfidence: true,
+          error: data.error || data.message || 'Low confidence — please upload a clearer leaf image.',
+          diagnosis: null
+        };
       }
-    } catch (geminiErr) {
-      console.warn("Gemini Vision fallback failed, engaging Client-Side Agronomic Engine:", geminiErr.message);
-    }
 
-    // Tier 3: Client-Side Agronomic Engine with Dynamic Visual Pixel Score
-    const fallbackDiag = generateFallbackDiagnosis(file.name, analysisId, visualData);
-    fallbackDiag.imageUrl = URL.createObjectURL(file);
+      if (data.success !== false) {
+        let detectedCrop = data.crop || 'Unknown Crop';
+        let detectedDisease = data.disease || 'Unknown Disease';
+        
+        if (!data.crop && data.prediction) {
+          if (data.prediction.includes('___')) {
+            const parts = data.prediction.split('___');
+            detectedCrop = parts[0].replace(/_/g, ' ');
+            detectedDisease = parts[1].replace(/_/g, ' ');
+          } else {
+            detectedDisease = data.prediction;
+          }
+        }
 
-    if (uid) {
-      try {
-        await addDoc(collection(db, 'disease_history'), {
-          userId: uid,
-          ...fallbackDiag,
-          createdAt: serverTimestamp()
+        const top3Data = data.top_predictions || data.top_3_predictions || {};
+        const top3Formatted = Object.entries(top3Data).map(([key, val]) => {
+          let c = key, d = key;
+          if (key.includes('___')) {
+            const p = key.split('___');
+            c = p[0].replace(/_/g, ' ');
+            d = p[1].replace(/_/g, ' ');
+          }
+          return { crop: c, disease: d, confidence: val };
         });
-      } catch (e) {}
-    }
 
-    return { success: true, diagnosis: fallbackDiag };
+        const recs = data.recommendations || {};
+
+        const diagnosis = {
+          analysisId,
+          crop: detectedCrop,
+          cropName: detectedCrop,
+          disease: detectedDisease,
+          diseaseName: detectedDisease,
+          confidence: data.confidence,
+          healthScore: data.health_score || visualData.healthScore,
+          healthRating: data.health_rating || (detectedDisease.toLowerCase().includes('healthy') ? 'Healthy' : (visualData.healthScore >= 50 ? 'Moderate' : 'Poor')),
+          severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : (visualData.healthScore >= 50 ? 'Moderate' : 'High')),
+          affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `${visualData.affectedPct}%`),
+          riskLevel: data.risk_level || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
+          treatment: data.chemical_treatment ? data.chemical_treatment.join(' ') : (recs['Chemical Treatment'] || 'Consult agricultural expert'),
+          medicine: recs['Chemical Treatment'] || 'Fungicide treatment',
+          organicSolution: data.biological_treatment ? data.biological_treatment.join(' ') : (recs['Organic Treatment'] || 'Neem spray'),
+          prevention: data.prevention ? data.prevention.join(' ') : (recs['Prevention'] || 'Crop rotation'),
+          immediatePrecautions: data.immediate_precautions ? data.immediate_precautions.join(' ') : (recs['Immediate Precautions'] || 'Monitor leaves'),
+          futurePrevention: recs['Future Prevention'] || 'Use certified seeds',
+          recoveryTimeline: recs['Recovery Timeline'] || '7-10 Days',
+          nextScanReminder: recs['Next Scan Reminder'] || 'In 5 Days',
+          symptoms: recs['Symptoms'] || 'Foliar lesions',
+          cause: recs['Cause'] || 'Fungal/bacterial pathogen',
+          recoveryAdvice: recs['Recovery Advice'] || 'Monitor recovery progress',
+          modelVersion: data.model_version || 'v1 (MobileNetV2)',
+          predictionTime: data.prediction_time_sec || 0.5,
+          imageUrl: URL.createObjectURL(file),
+          createdAt: new Date().toISOString(),
+          top3: top3Formatted,
+          biologicalTreatment: data.biological_treatment || [],
+          chemicalTreatment: data.chemical_treatment || [],
+          recovery_estimate: data.recovery_estimate || null
+        };
+
+        if (uid) {
+          try {
+            await addDoc(collection(db, 'disease_history'), {
+              userId: uid,
+              ...diagnosis,
+              createdAt: serverTimestamp()
+            });
+          } catch (e) {
+            console.warn('Firestore disease save warning:', e);
+          }
+        }
+
+        return { success: true, diagnosis };
+      }
+      
+      // Fallback for failed success flag from backend
+      return { success: false, error: data.error || 'Analysis failed on backend' };
+      
+    } catch (apiErr) {
+      console.warn("FastAPI predict-disease network error:", apiErr.message);
+      return { success: false, error: "AI Engine Offline: Could not reach the ML backend." };
+    }
   },
 
   // Government Schemes via ML Engine / API

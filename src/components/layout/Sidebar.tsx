@@ -32,6 +32,7 @@ const navItems = [
   { key: 'nav_irrigation', defaultName: 'Smart Irrigation', path: '/irrigation', icon: Droplets, exact: false },
   { key: 'nav_analytics', defaultName: 'Analytics Hub', path: '/analytics', icon: BarChart3, exact: false },
   { key: 'nav_government_schemes', defaultName: 'Government Schemes', path: '/government-schemes', icon: Landmark, exact: false },
+  { key: 'nav_market', defaultName: 'Market Intelligence', path: '/market-intelligence', icon: ShoppingBag, exact: false },
   { key: 'alerts_notifications', defaultName: 'Alerts & Notifications', path: '/alerts', icon: Bell, exact: false },
   { key: 'nav_profile', defaultName: 'My Profile', path: '/profile', icon: User, exact: false },
   { key: 'nav_settings', defaultName: 'Settings', path: '/settings', icon: Settings, exact: false },

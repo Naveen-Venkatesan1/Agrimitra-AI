@@ -238,6 +238,9 @@ export const SmartIrrigation = () => {
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Real-time soil moisture telemetry, AI crop water modeling, and predictive rainfall automation
           </p>
+          <div className="mt-2">
+            <Badge variant="warning" size="sm">Simulation Mode / Hardware Not Connected</Badge>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

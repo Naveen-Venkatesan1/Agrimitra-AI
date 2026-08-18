@@ -30,34 +30,8 @@ export const CropIntelligenceReport = () => {
   useEffect(() => {
     const checkAndRestore = async () => {
       if (!latestDiagnosis || (!latestDiagnosis.disease && !latestDiagnosis.prediction)) {
-        // Generate baseline crop analysis for user's primary crop
-        const defaultCrop = user?.primaryCrop || 'Paddy (Rice)';
-        const defaultDiag = {
-          scanId: 'default_scan_' + Date.now(),
-          crop: defaultCrop,
-          cropName: defaultCrop,
-          disease: `${defaultCrop} Leaf Blast Prevention & Health Assessment`,
-          diseaseName: `${defaultCrop} Leaf Blast Prevention & Health Assessment`,
-          confidence: 94.8,
-          healthScore: 88,
-          healthRating: 'Good',
-          severity: 'Moderate',
-          affectedArea: '10-15%',
-          riskLevel: 'Moderate',
-          treatment: 'Apply Tricyclazole 75% WP @ 0.6g/L or Hexaconazole 5% EC @ 2ml/L.',
-          medicine: 'Tricyclazole 75% WP',
-          organicSolution: 'Apply 5% Neem Seed Kernel Extract (NSKE) or Pseudomonas fluorescens @ 10g/L.',
-          prevention: 'Maintain proper field drainage and avoid excessive early nitrogen application.',
-          immediatePrecautions: 'Monitor leaves twice weekly and maintain field bunding.',
-          futurePrevention: 'Use certified disease-resistant seed varieties.',
-          recoveryTimeline: '7-10 Days',
-          nextScanReminder: 'In 5 Days',
-          symptoms: 'Foliar lesions or minor discoloration on leaf tips.',
-          cause: 'Seasonal humidity and temperature variations.',
-          recoveryAdvice: 'Maintain optimal water level and inspect recovery in 5 days.',
-          scanTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (' + new Date().toLocaleDateString() + ')'
-        };
-        setLatestDiagnosis(defaultDiag);
+        // No active scan found, redirect to scanner page instead of faking data
+        navigate('/crop-intelligence', { replace: true });
         return;
       }
 

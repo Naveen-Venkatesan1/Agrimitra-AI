@@ -111,10 +111,23 @@ export const CropIntelligence = () => {
 
     const res = await cropApi.analyzeCropDisease(file, user?.id);
 
+    if (!res.success) {
+      setAnalysisStatus('error');
+      setAnalysisResult(null);
+      addAlert({
+        title: 'Analysis Failed',
+        message: res.error || 'Analysis failed. Please try again.',
+        type: 'System Error',
+        category: 'system',
+        severity: 'danger'
+      });
+      return;
+    }
+
     if (res.isLowConfidence) {
       addAlert({
         title: 'Low Confidence Disease Analysis',
-        message: 'Could not reach minimum 85% confidence threshold for diagnosis.',
+        message: res.error || 'Could not reach minimum confidence threshold for diagnosis.',
         type: 'Disease Alert',
         category: 'disease',
         severity: 'warning'
