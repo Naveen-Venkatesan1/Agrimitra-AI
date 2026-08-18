@@ -290,6 +290,27 @@ export const CropIntelligenceReport = () => {
             </div>
           </Card>
 
+          {/* 8.5. Cultural Management */}
+          {diag.culturalManagement && diag.culturalManagement.length > 0 && (
+            <Card hover={false} className="p-5 printable-card">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+                  <Sprout className="w-4 h-4 text-slate-700" /> Cultural Management
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                  {Array.isArray(diag.culturalManagement) ? diag.culturalManagement.join(' ') : diag.culturalManagement}
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {/* 8.6. Source Attribution */}
+          <div className="text-center text-xs text-gray-500 italic px-4 pb-2">
+            Recommendations sourced from: <strong>{diag.recommendationSource || 'AgriMitra AI Knowledge Base'}</strong>
+            <br />
+            <span className="text-[10px]">Diagnosis Engine: {diag.diagnosisSource || 'Local ML'}. Information is provided for guidance. Always verify with a local agricultural expert.</span>
+          </div>
+
           {/* 9. AI Assistant Integration CTA (Hidden in Print) */}
           <Card hover={false} className="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl print:hidden">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm font-semibold text-blue-900">

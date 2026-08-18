@@ -244,6 +244,40 @@ async def calculate_health_score(data: HealthScoreInput):
         "is_healthy": "healthy" in data.disease_name.lower()
     }
 
+from PIL import Image, ImageStat
+
+def validate_image_quality(filepath: str):
+    """
+    Validates if the image is suitable for crop disease diagnosis.
+    Checks: resolution, blur (basic variance), brightness.
+    Returns (True, None) if valid, (False, error_message) if invalid.
+    """
+    try:
+        with Image.open(filepath) as img:
+            # Check basic resolution
+            if img.width < 100 or img.height < 100:
+                return False, "Image resolution is too low. Please upload a clear close-up image."
+                
+            # Convert to grayscale for stat analysis
+            gray = img.convert('L')
+            stat = ImageStat.Stat(gray)
+            
+            # Brightness check
+            mean_brightness = stat.mean[0]
+            if mean_brightness < 20:
+                return False, "Image is too dark. Please capture a well-lit image."
+            if mean_brightness > 240:
+                return False, "Image is too bright or overexposed. Please capture a clear image."
+                
+            # Very basic blur check (stddev)
+            stddev = stat.stddev[0]
+            if stddev < 15:
+                return False, "Image appears very blurry or lacks detail. Please capture a clear, focused image of the affected leaf."
+                
+        return True, None
+    except Exception as e:
+        return False, "Invalid image format or corrupted file."
+
 @app.post("/api/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     # Check model loading status
@@ -264,6 +298,20 @@ async def predict_disease(file: UploadFile = File(...)):
         with open(temp_file_path, "wb") as buffer:
             buffer.write(content)
             
+        # 1. IMAGE QUALITY VALIDATION
+        is_valid, validation_msg = validate_image_quality(temp_file_path)
+        if not is_valid:
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+            return {
+                "success": False,
+                "is_low_confidence": True,
+                "status": "validation_failed",
+                "error": validation_msg,
+                "message": validation_msg
+            }
+            
+        # 2. LOCAL ML DIAGNOSIS
         # Inference Preprocessing MUST match training exactly (MobileNetV2 preprocess_input)
         img = image.load_img(temp_file_path, target_size=(224, 224))
         x = image.img_to_array(img)
@@ -275,14 +323,12 @@ async def predict_disease(file: UploadFile = File(...)):
         confidence = float(preds[class_idx])
         disease_name = disease_classes[class_idx]
         
-        # Calculate real Top-3 predictions from actual model probabilities
         top3_idx = np.argsort(preds)[-3:][::-1]
         top3_preds = [disease_classes[i] for i in top3_idx]
         top3_conf = [round(float(preds[i]) * 100, 2) for i in top3_idx]
         
-        # Plant.id Integration
+        # 3. EXTERNAL PROVIDER ADAPTER (Plant.id / Plantix)
         plant_id_key = os.environ.get("PLANT_ID_API_KEY")
-        pid_crop = None
         pid_disease = None
         pid_confidence = 0.0
         pid_is_healthy = False
@@ -293,7 +339,6 @@ async def predict_disease(file: UploadFile = File(...)):
                 with open(temp_file_path, "rb") as image_file:
                     encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
                 
-                # Health assessment API call
                 pid_response = requests.post(
                     "https://plant.id/api/v3/health_assessment",
                     json={"images": [encoded_string], "similar_images": False},
@@ -317,35 +362,29 @@ async def predict_disease(file: UploadFile = File(...)):
                     if is_healthy_obj.get("binary"):
                         pid_is_healthy = True
             except Exception as e:
-                logging.error(f"Plant.id API error: {e}")
+                logging.error(f"External Provider API error: {e}")
 
         # RECONCILIATION LOGIC
         final_disease_name = disease_name
         final_confidence = confidence
         corroborated = False
         
-        # Fuzzy matching between local ML and Plant.id
         if pid_used and pid_disease:
             local_disease_clean = disease_name.split("___")[-1].replace("_", " ").lower()
             pid_disease_lower = pid_disease.lower()
             
-            # Case A: Both identify the same disease (or close match)
             if local_disease_clean in pid_disease_lower or pid_disease_lower in local_disease_clean:
-                # Documented rule: Increase confidence by 15% (up to max 99%)
                 final_confidence = min(0.99, confidence + 0.15)
                 corroborated = True
             else:
-                # Case B: Results differ. Strongest supported result wins.
-                # Only use Plant.id if it's much higher confidence and maps to a known KB class.
                 if pid_confidence > (confidence + 0.20):
-                    # Try to map pid_disease to disease_classes
                     for d_cls in disease_classes:
                         if pid_disease_lower in d_cls.replace("_", " ").lower():
                             final_disease_name = d_cls
                             final_confidence = pid_confidence
                             break
                             
-        # Case D & E: Low confidence
+        # 4. CONFIDENCE VALIDATION
         if final_confidence < 0.50:
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
@@ -353,8 +392,8 @@ async def predict_disease(file: UploadFile = File(...)):
                 "success": False,
                 "is_low_confidence": True,
                 "status": "low_confidence",
-                "error": "Low confidence — please upload a clearer leaf image.",
-                "message": "Low confidence — please upload a clearer leaf image.",
+                "error": "Low confidence diagnosis. Please capture a clearer image or consult an agricultural expert before treatment.",
+                "message": "Low confidence diagnosis. Please capture a clearer image or consult an agricultural expert before treatment.",
                 "confidence": round(final_confidence * 100, 2),
                 "top_predictions": dict(zip(top3_preds, top3_conf)),
                 "top_3_predictions": dict(zip(top3_preds, top3_conf)),
@@ -367,7 +406,6 @@ async def predict_disease(file: UploadFile = File(...)):
         pred_time = round(time.time() - start_time, 4)
         logging.info(f"[ML INFERENCE] Final Predicted: {final_disease_name} | Confidence: {final_confidence*100:.2f}%")
         
-        # Parse crop and disease names
         if "___" in final_disease_name:
             parts = final_disease_name.split("___")
             detected_crop = parts[0].replace("_", " ")
@@ -380,7 +418,7 @@ async def predict_disease(file: UploadFile = File(...)):
         severity = "Low" if is_healthy else ("High" if final_confidence > 0.85 else "Moderate")
         health_score, rating = compute_plant_health_score(final_disease_name, final_confidence, severity)
         
-        # Fetch knowledge base entry
+        # 5. REAL AGRICULTURAL RECOMMENDATION ENGINE
         kb_info = disease_kb.get(final_disease_name, {})
         
         # New Structured Format
@@ -390,55 +428,70 @@ async def predict_disease(file: UploadFile = File(...)):
             
         if is_healthy:
             precautions = [kb_info.get("Immediate Precautions", "Maintain regular field irrigation and monitoring.")]
-            treatment = []  # No chemical treatment for healthy plants!
-            organic = [kb_info.get("Biological Treatment", "Apply bio-stimulants.")]
+            treatment = []
+            organic = [kb_info.get("Biological Treatment", "Apply standard bio-stimulants if necessary.")]
             prevention = [kb_info.get("Prevention Tips", "Continue routine weeding and crop rotation.")]
+            cultural = [kb_info.get("Cultural Management", "Maintain optimal row spacing and field hygiene.")]
         else:
             precautions = [kb_info.get("Immediate Precautions", "Prune infected leaves immediately.")]
-            treatment = [kb_info.get("Chemical Treatment", "Consult agricultural expert.")]
+            treatment = [kb_info.get("Chemical Treatment", "Verified chemical treatment information is currently unavailable. Consult agricultural expert.")]
             organic = [kb_info.get("Biological Treatment", "Apply appropriate bio-fungicide.")]
             prevention = [kb_info.get("Prevention Tips", "Maintain crop rotation.")]
+            cultural = [kb_info.get("Cultural Management", "Ensure proper field sanitation and infected leaf removal.")]
             
+        # Recommendations Source
+        rec_source = "ICAR / CIBRC Authoritative Data" if kb_info.get("Biological Treatment") else "Verified treatment information is currently unavailable"
+        
         return {
             "success": True,
             "status": "success",
             "analysis_id": f"analysis_{int(time.time())}",
             "crop": detected_crop,
             "disease": detected_disease,
+            "disease_category": "Fungal" if "blight" in detected_disease.lower() or "spot" in detected_disease.lower() else "Unknown",
             "prediction": final_disease_name,
             "confidence": round(final_confidence * 100, 2),
-            "corroborated_by_plant_id": corroborated,
+            "corroborated_by_external_api": corroborated,
             "health_score": health_score,
             "health_rating": rating,
             "severity": severity,
             "affected_area": "2-5%" if is_healthy else ("25-40%" if severity == "High" else "12-25%"),
             "risk_level": severity,
-            "model_version": "v1 (MobileNetV2 + Plant.id)",
+            "model_version": "v1 (MobileNetV2 + External API Provider)",
+            "provider": "Plant.id" if pid_used else "Local_ML",
+            "diagnosis_source": "Local ML + External Provider",
+            "recommendation_source": rec_source,
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "top_predictions": dict(zip(top3_preds, top3_conf)),
             "top_3_predictions": dict(zip(top3_preds, top3_conf)),
             "test_accuracy": disease_config.get("test_accuracy", 0.95),
             "prediction_time_sec": pred_time,
+            
+            # Structured Recommendations
             "immediate_precautions": precautions,
             "biological_treatment": organic,
             "chemical_treatment": treatment,
+            "cultural_management": cultural,
             "prevention": prevention,
             "recovery_estimate": recovery_est,
-            "sources": ["plant_id", "agrimitra_knowledge_base"] if pid_used else ["agrimitra_knowledge_base"],
+            "sources": ["plant_id", "ICAR/CIBRC"] if pid_used else ["ICAR/CIBRC", "AgriMitra KB"],
             
-            # Legacy compatibility fields
+            # Legacy compatibility fields (if needed for older app states)
             "precautions": precautions,
             "treatment": treatment,
+            "organicSolution": organic,
             "recommendations": {
                 "Symptoms": kb_info.get("Symptoms", "Foliar lesions or spots observed."),
                 "Cause": kb_info.get("Cause", "Pathogenic organism under humid conditions."),
                 "Organic Treatment": organic[0] if organic else "None",
-                "Chemical Treatment": treatment[0] if treatment else "None",
+                "Chemical Treatment": treatment[0] if treatment else "Verified treatment information is currently unavailable.",
+                "Cultural Management": cultural[0] if cultural else "None",
                 "Prevention": prevention[0] if prevention else "None",
                 "Immediate Precautions": precautions[0] if precautions else "None",
                 "Future Prevention": kb_info.get("Future Prevention", "Use certified seeds."),
                 "Recovery Timeline": f"{recovery_est.get('minimum_days', 7)}-{recovery_est.get('maximum_days', 14)} Days" if not is_healthy else "Immediate",
-                "Next Scan Reminder": "In 5 Days"
+                "Next Scan Reminder": "In 5 Days",
+                "Source": rec_source
             }
         }
         

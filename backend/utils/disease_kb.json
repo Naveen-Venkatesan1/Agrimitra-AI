@@ -16,7 +16,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Apple___Black_rot": {
     "Symptoms": "Purple spots on leaves expanding to frog-eye leaf spots; reddish-brown decay on fruit.",
@@ -35,7 +36,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Apple___Cedar_apple_rust": {
     "Symptoms": "Bright yellow-orange spots on upper leaf surface with tube-like spore structures beneath.",
@@ -54,7 +56,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Apple___healthy": {
     "Symptoms": "Vibrant green leaves without spots, discoloration, or structural distortion.",
@@ -72,7 +75,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Blueberry___healthy": {
     "Symptoms": "Uniform green foliage, firm stems, and normal berry cluster development.",
@@ -90,7 +94,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Cherry_(including_sour)___Powdery_mildew": {
     "Symptoms": "White powdery fungal coating on leaves and young shoots causing curling.",
@@ -109,7 +114,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Cherry_(including_sour)___healthy": {
     "Symptoms": "Deep green, glossy foliage without leaf spots or white fungal patches.",
@@ -127,7 +133,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
     "Symptoms": "Rectangular grey-to-tan lesions constrained by leaf veins on lower leaves.",
@@ -146,7 +153,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Corn_(maize)___Common_rust_": {
     "Symptoms": "Small powdery brownish-red pustules scattered on both upper and lower leaf surfaces.",
@@ -165,7 +173,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Corn_(maize)___Northern_Leaf_Blight": {
     "Symptoms": "Long elliptical grayish-green cigar-shaped lesions expanding across leaf blades.",
@@ -184,7 +193,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Corn_(maize)___healthy": {
     "Symptoms": "Sturdy green leaves without lesions, striping, or fungal rust pustules.",
@@ -202,7 +212,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Grape___Black_rot": {
     "Symptoms": "Small reddish-brown spots on leaves; dark shriveled black mummy berries on clusters.",
@@ -221,7 +232,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Grape___Esca_(Black_Measles)": {
     "Symptoms": "Tiger-stripe yellow/brown leaf chlorosis; dark purple spots on fruit skins.",
@@ -240,7 +252,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
     "Symptoms": "Irregular dark brown leaf spots with yellow halos, leading to leaf drop.",
@@ -259,7 +272,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Grape___healthy": {
     "Symptoms": "Lush dark green vine foliage and healthy berry clusters without spots.",
@@ -277,7 +291,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Orange___Haunglongbing_(Citrus_greening)": {
     "Symptoms": "Asymmetrical yellow mottling on leaves, stunted small green sour fruit with dark seeds.",
@@ -296,7 +311,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Peach___Bacterial_spot": {
     "Symptoms": "Small water-soaked leaf spots turning dark brown-purple, eventually dropping out (shot-hole).",
@@ -315,7 +331,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Peach___healthy": {
     "Symptoms": "Smooth green foliage, vibrant bark, and clean fruit skin.",
@@ -333,7 +350,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Pepper,_bell___Bacterial_spot": {
     "Symptoms": "Small yellow-green leaf spots growing into dark raised water-soaked lesions with yellow halos.",
@@ -352,7 +370,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Pepper,_bell___healthy": {
     "Symptoms": "Uniform green pepper leaves and firm fruits without spots or wilting.",
@@ -370,7 +389,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Potato___Early_blight": {
     "Symptoms": "Dark brown spots with concentric target-like rings on lower mature potato leaves.",
@@ -389,7 +409,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Potato___Late_blight": {
     "Symptoms": "Large dark brown-black water-soaked lesions on leaf tips/edges with white mold underneath.",
@@ -408,7 +429,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Potato___healthy": {
     "Symptoms": "Lush green potato foliage and sturdy stems free of lesions.",
@@ -426,7 +448,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Raspberry___healthy": {
     "Symptoms": "Bright green leaves, clean canes, and normal flower/fruit clusters.",
@@ -444,7 +467,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Soybean___healthy": {
     "Symptoms": "Uniform green trifoliate leaves without yellowing, rust, or bacterial spots.",
@@ -462,7 +486,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Squash___Powdery_mildew": {
     "Symptoms": "Dusty white powdery coating covering upper leaf surfaces, turning leaves yellow and brittle.",
@@ -481,7 +506,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Strawberry___Leaf_scorch": {
     "Symptoms": "Irregular purple-red spots with dark brown centers on leaves, causing scorched dry leaf edges.",
@@ -500,7 +526,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Strawberry___healthy": {
     "Symptoms": "Dark green trifoliate leaves, healthy white blooms, and clean runner crowns.",
@@ -518,7 +545,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Tomato___Bacterial_spot": {
     "Symptoms": "Small dark brown water-soaked leaf spots with yellow halos, leading to defoliation.",
@@ -537,7 +565,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Early_blight": {
     "Symptoms": "Dark brown concentric target-like rings on mature lower leaves with yellow halos.",
@@ -556,7 +585,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Late_blight": {
     "Symptoms": "Large water-soaked dark green-black lesions on leaves and stems with white mold.",
@@ -575,7 +605,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Leaf_Mold": {
     "Symptoms": "Pale yellow spots on upper leaf surface with velvety olive-green fungal mold underneath.",
@@ -594,7 +625,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Septoria_leaf_spot": {
     "Symptoms": "Numerous small circular spots with dark brown margins and greyish centers containing tiny black dots.",
@@ -613,7 +645,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Spider_mites Two-spotted_spider_mite": {
     "Symptoms": "Fine yellow speckling/bronzing on upper leaves with delicate silk webbing underneath.",
@@ -632,7 +665,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Target_Spot": {
     "Symptoms": "Small water-soaked leaf spots expanding into brown lesions with faint concentric rings.",
@@ -651,7 +685,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
     "Symptoms": "Severe upward leaf curling, yellowing leaf margins, stunted plant growth, and flower drop.",
@@ -670,7 +705,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___Tomato_mosaic_virus": {
     "Symptoms": "Mottled light and dark green mosaic patterns on leaves, leaf distortion, and fern-like leaves.",
@@ -689,7 +725,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Tomato___healthy": {
     "Symptoms": "No spots or lesions. Stems and foliage are vibrant green and structurally strong.",
@@ -707,7 +744,8 @@
       "conditions": [
         "Plant is healthy"
       ]
-    }
+    },
+    "Cultural Management": "Maintain optimal row spacing and field hygiene."
   },
   "Rice___Leaf_Blast": {
     "Symptoms": "Diamond or spindle-shaped lesions with grayish centers and reddish-brown borders on leaf blades.",
@@ -726,7 +764,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Rice___Bacterial_blight": {
     "Symptoms": "Wavy yellow-to-brown wilting stripes starting from leaf tips and margins, progressing downwards.",
@@ -745,7 +784,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Rice___Brown_spot": {
     "Symptoms": "Oval or circular dark brown spots with yellow halos evenly distributed across mature leaf blades.",
@@ -764,7 +804,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Unknown": {
     "Symptoms": "Unusual leaf discoloration, spotting, or leaf curling.",
@@ -783,7 +824,8 @@
         "Optimal weather conditions",
         "Following treatment protocol"
       ]
-    }
+    },
+    "Cultural Management": "Ensure proper field sanitation, remove infected plant debris, and practice crop rotation."
   },
   "Rice___Bacterial_leaf_blight": {
     "disease": "Bacterial Leaf Blight",

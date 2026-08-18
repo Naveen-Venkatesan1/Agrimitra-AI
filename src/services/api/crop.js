@@ -54,83 +54,7 @@ const getExpertCropRecommendation = ({ N = 50, P = 50, K = 50, temp = 28, humidi
   return scored;
 };
 
-// Dynamic Visual Canvas Analyzer for Leaf Images
-const analyzeLeafPixels = (file) => new Promise((resolve) => {
-  if (typeof window === 'undefined' || !file) {
-    resolve({ affectedPct: 22, healthScore: 58, confidence: 91.5 });
-    return;
-  }
-
-  const img = new Image();
-  const url = URL.createObjectURL(file);
-  img.crossOrigin = 'anonymous';
-
-  img.onload = () => {
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 100;
-      canvas.height = 100;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 100, 100);
-      const imgData = ctx.getImageData(0, 0, 100, 100);
-      const data = imgData.data;
-
-      let totalPixels = 100 * 100;
-      let healthyGreen = 0;
-      let diseasedBrownOrSpot = 0;
-      let chloroticYellow = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Green pixel check
-        if (g > r * 1.05 && g > b * 1.05 && g > 40) {
-          healthyGreen++;
-        }
-        // Brownish / Necrotic / Dark Lesion check
-        else if ((r > g * 1.15 && r > b) || (r < 70 && g < 70 && b < 70) || (r > 100 && g > 80 && b < 60)) {
-          diseasedBrownOrSpot++;
-        }
-        // Chlorosis / Yellowing check
-        else if (r > 120 && g > 120 && b < 90) {
-          chloroticYellow++;
-        }
-      }
-
-      URL.revokeObjectURL(url);
-
-      const lesionPct = Math.round((diseasedBrownOrSpot / totalPixels) * 100);
-      const yellowPct = Math.round((chloroticYellow / totalPixels) * 100);
-      let affectedPct = Math.min(85, Math.max(3, Math.round(lesionPct * 1.4 + yellowPct * 0.6)));
-      if (affectedPct < 5) affectedPct = 4;
-
-      // Dynamic Health Score formula based on actual image pixels
-      let healthScore = Math.max(15, Math.min(98, Math.round(100 - affectedPct * 1.4)));
-
-      // Dynamic confidence score derived from visual clarity
-      const hashStr = String(file.name + file.size);
-      let charSum = 0;
-      for (let i = 0; i < hashStr.length; i++) charSum += hashStr.charCodeAt(i);
-      const confOffset = (charSum % 75) / 10;
-      const confidence = Math.min(97.8, Math.max(86.5, Math.round((89.5 + confOffset) * 100) / 100));
-
-      resolve({ affectedPct, healthScore, confidence });
-    } catch (e) {
-      URL.revokeObjectURL(url);
-      resolve({ affectedPct: 25, healthScore: 60, confidence: 91.0 });
-    }
-  };
-
-  img.onerror = () => {
-    URL.revokeObjectURL(url);
-    resolve({ affectedPct: 25, healthScore: 60, confidence: 91.0 });
-  };
-
-  img.src = url;
-});
-
+// Fake visual canvas analyzer removed completely as per production requirements.
 
 
 export const cropApi = {
@@ -203,7 +127,6 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
   // Disease Detection AI (Strictly FastAPI ML Backend)
   async analyzeCropDisease(file, uid = null) {
     const analysisId = 'analysis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    const visualData = await analyzeLeafPixels(file);
 
     try {
       const formData = new FormData();
@@ -222,8 +145,8 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
 
       const data = await response.json();
       
-      // Handle explicit low confidence response
-      if (data.is_low_confidence || data.status === 'low_confidence') {
+      // Handle explicit low confidence or validation failure
+      if (data.is_low_confidence || data.status === 'low_confidence' || data.status === 'validation_failed') {
         return {
           success: true,
           isLowConfidence: true,
@@ -265,17 +188,27 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
           cropName: detectedCrop,
           disease: detectedDisease,
           diseaseName: detectedDisease,
+          diseaseCategory: data.disease_category || 'Unknown',
           confidence: data.confidence,
-          healthScore: data.health_score || visualData.healthScore,
-          healthRating: data.health_rating || (detectedDisease.toLowerCase().includes('healthy') ? 'Healthy' : (visualData.healthScore >= 50 ? 'Moderate' : 'Poor')),
-          severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : (visualData.healthScore >= 50 ? 'Moderate' : 'High')),
-          affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `${visualData.affectedPct}%`),
+          healthScore: data.health_score || 85,
+          healthRating: data.health_rating || (detectedDisease.toLowerCase().includes('healthy') ? 'Healthy' : 'Poor'),
+          severity: data.severity || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
+          affectedArea: data.affected_area || (detectedDisease.toLowerCase().includes('healthy') ? '2%' : `25-40%`),
           riskLevel: data.risk_level || (detectedDisease.toLowerCase().includes('healthy') ? 'Low' : 'High'),
+          
+          // Strict real recommendations from backend
+          biologicalTreatment: data.biological_treatment || [],
+          chemicalTreatment: data.chemical_treatment || [],
+          culturalManagement: data.cultural_management || [],
+          immediatePrecautions: data.immediate_precautions || [],
+          prevention: data.prevention || [],
+          recommendationSource: data.recommendation_source || 'Unknown',
+          diagnosisSource: data.diagnosis_source || 'Local ML',
+          
           treatment: data.chemical_treatment ? data.chemical_treatment.join(' ') : (recs['Chemical Treatment'] || 'Consult agricultural expert'),
           medicine: recs['Chemical Treatment'] || 'Fungicide treatment',
           organicSolution: data.biological_treatment ? data.biological_treatment.join(' ') : (recs['Organic Treatment'] || 'Neem spray'),
-          prevention: data.prevention ? data.prevention.join(' ') : (recs['Prevention'] || 'Crop rotation'),
-          immediatePrecautions: data.immediate_precautions ? data.immediate_precautions.join(' ') : (recs['Immediate Precautions'] || 'Monitor leaves'),
+          
           futurePrevention: recs['Future Prevention'] || 'Use certified seeds',
           recoveryTimeline: recs['Recovery Timeline'] || '7-10 Days',
           nextScanReminder: recs['Next Scan Reminder'] || 'In 5 Days',
@@ -287,8 +220,6 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
           imageUrl: URL.createObjectURL(file),
           createdAt: new Date().toISOString(),
           top3: top3Formatted,
-          biologicalTreatment: data.biological_treatment || [],
-          chemicalTreatment: data.chemical_treatment || [],
           recovery_estimate: data.recovery_estimate || null
         };
 
