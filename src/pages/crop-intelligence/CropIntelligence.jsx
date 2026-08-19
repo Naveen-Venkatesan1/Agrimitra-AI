@@ -116,12 +116,47 @@ export const CropIntelligence = () => {
     return () => clearInterval(timer);
   }, [analysisStatus]);
 
-  const triggerAnalysis = async (fileToAnalyze = selectedFile) => {
+  // Helper: safely extract a renderable string from a value that may be a string or nested object
+  const safeString = (val, nameKey = 'name', fallback = 'Unknown') => {
+    if (val === undefined || val === null) return fallback;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val[nameKey] !== undefined) return String(val[nameKey]);
+    if (typeof val === 'object') return fallback;
+    return String(val);
+  };
+
+  // Helper: safely extract confidence — supports string "60.84%", number 0.6084, number 60.84, or nested object { confidence: 0.6084 }
+  const safeConfidence = (diag) => {
+    // Priority: confidence_score (always 0-1 float), then confidence (string or number), then disease.confidence
+    if (diag.confidence_score !== undefined && diag.confidence_score !== null) {
+      return diag.confidence_score;
+    }
+    if (diag.confidence !== undefined && diag.confidence !== null) {
+      return diag.confidence;
+    }
+    if (typeof diag.disease === 'object' && diag.disease?.confidence !== undefined) {
+      return diag.disease.confidence;
+    }
+    return 0;
+  };
+
+  // Helper: safely extract severity — supports string or nested disease object
+  const safeSeverity = (diag) => {
+    if (typeof diag.severity === 'string') return diag.severity;
+    if (typeof diag.disease === 'object' && diag.disease?.severity) return diag.disease.severity;
+    const diseaseName = safeString(diag.diseaseName || diag.disease);
+    return diseaseName.toLowerCase().includes('healthy') ? 'Low' : 'Moderate';
+  };
+
+  const triggerAnalysis = async (fileToAnalyze, scanId, imageUrl) => {
     const file = fileToAnalyze || selectedFile;
     if (!file) return;
 
+    // Use the scanId passed explicitly from handleImageUpload — never generate a second one
+    const scanIdToUse = scanId || currentScanId || ('scan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
+    const imageUrlToUse = imageUrl || selectedImage;
+
     setAnalysisStatus('analyzing');
-    const scanIdToUse = currentScanId || ('scan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8));
     setCurrentScanId(scanIdToUse);
 
     const res = await cropApi.analyzeCropDisease(file, user?.id);
@@ -150,7 +185,7 @@ export const CropIntelligence = () => {
       const lowResult = {
         scanId: scanIdToUse,
         analysisId: scanIdToUse,
-        image: selectedImage,
+        image: imageUrlToUse,
         imageKey: user?.id ? `${user.id}_latest_leaf_image` : 'guest_latest_leaf_image',
         isLowConfidence: true,
         message: res.error || 'Unable to confidently identify this leaf. Please upload a clear image of the affected leaf.'
@@ -163,16 +198,35 @@ export const CropIntelligence = () => {
 
     if (res.diagnosis) {
       const diag = res.diagnosis;
+
+      // SAFE NORMALIZATION: Extract renderable strings from potentially nested objects
+      const cropName = safeString(diag.cropName, 'name') !== 'Unknown'
+        ? safeString(diag.cropName, 'name')
+        : safeString(diag.crop_name, 'name') !== 'Unknown'
+          ? safeString(diag.crop_name, 'name')
+          : safeString(diag.crop, 'name', 'Unknown');
+
+      const diseaseName = safeString(diag.diseaseName, 'name') !== 'Unknown'
+        ? safeString(diag.diseaseName, 'name')
+        : safeString(diag.disease_name, 'name') !== 'Unknown'
+          ? safeString(diag.disease_name, 'name')
+          : safeString(diag.disease, 'name', 'Unknown');
+
+      const confidence = safeConfidence(diag);
+      const severity = safeSeverity(diag);
+
       const formatted = {
         ...diag,
         scanId: scanIdToUse,
         analysisId: scanIdToUse,
-        image: selectedImage || diag.imageUrl,
+        image: imageUrlToUse || diag.imageUrl,
         imageKey: user?.id ? `${user.id}_latest_leaf_image` : 'guest_latest_leaf_image',
-        crop: diag.cropName || diag.crop,
-        disease: diag.diseaseName || diag.disease,
-        confidence: diag.confidence,
-        riskLevel: diag.severity?.includes('High') ? 'High' : (diag.severity || 'Low'),
+        // ALWAYS renderable strings — never raw objects
+        crop: cropName,
+        disease: diseaseName,
+        confidence: confidence,
+        severity: severity,
+        riskLevel: String(severity).includes('High') ? 'High' : (severity || 'Low'),
         riskScore: diag.healthScore,
         healthScore: diag.healthScore,
         healthRating: diag.healthRating,
@@ -191,6 +245,10 @@ export const CropIntelligence = () => {
         recoveryAdvice: diag.recoveryAdvice,
         predictionTime: diag.predictionTime,
         modelVersion: diag.modelVersion,
+        // Preserve nested objects for verification/plant_id display sections
+        verification: diag.verification,
+        local_ml: diag.local_ml,
+        plant_id: diag.plant_id,
         scanTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (' + new Date().toLocaleDateString() + ')'
       };
       setAnalysisResult(formatted);
@@ -222,7 +280,7 @@ export const CropIntelligence = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Immediately generate new scanId and invalidate previous analysis results
+    // Generate scanId ONCE for this entire analysis lifecycle
     const newScanId = 'scan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
     setCurrentScanId(newScanId);
     setAnalysisResult(null);
@@ -242,8 +300,8 @@ export const CropIntelligence = () => {
       console.warn('Failed to save uploaded image to local storage:', e);
     }
 
-    // Auto-trigger analysis immediately on image upload
-    triggerAnalysis(file);
+    // Pass scanId and imageUrl explicitly to avoid stale closure capturing outdated state
+    triggerAnalysis(file, newScanId, imgUrl);
   };
 
   const showRecButton = Boolean(

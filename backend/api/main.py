@@ -505,7 +505,6 @@ async def analyze_crop_health(file: UploadFile = File(...)):
 
         diagnosis = {
             # STRICT SCHEMA AS REQUESTED
-            "success": True,
             "crop": {
                 "name": final_crop,
                 "confidence": local_confidence

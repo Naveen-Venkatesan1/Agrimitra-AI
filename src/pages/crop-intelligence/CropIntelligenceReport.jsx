@@ -63,11 +63,26 @@ export const CropIntelligenceReport = () => {
     window.print();
   };
 
-  const diag = latestDiagnosis;
+  const rawDiag = latestDiagnosis;
+
+  // Defense-in-depth: ensure crop and disease are always renderable strings
+  const safeDiagStr = (val, fallback = 'Unknown') => {
+    if (val === undefined || val === null) return fallback;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val.name !== undefined) return String(val.name);
+    return fallback;
+  };
+
+  const diag = {
+    ...rawDiag,
+    crop: safeDiagStr(rawDiag.cropName) !== 'Unknown' ? safeDiagStr(rawDiag.cropName) : safeDiagStr(rawDiag.crop_name) !== 'Unknown' ? safeDiagStr(rawDiag.crop_name) : safeDiagStr(rawDiag.crop),
+    disease: safeDiagStr(rawDiag.diseaseName) !== 'Unknown' ? safeDiagStr(rawDiag.diseaseName) : safeDiagStr(rawDiag.disease_name) !== 'Unknown' ? safeDiagStr(rawDiag.disease_name) : safeDiagStr(rawDiag.disease),
+  };
+
   const isHealthy = String(diag.disease || diag.prediction || '').toLowerCase().includes('healthy');
-  const confVal = parseConfidenceNum(diag.confidence);
+  const confVal = parseConfidenceNum(diag.confidence_score || diag.confidence);
   const healthScore = diag.healthScore || diag.riskScore || (isHealthy ? 95 : 25);
-  const severity = diag.severity || (isHealthy ? 'Low' : 'High');
+  const severity = (typeof diag.severity === 'string' ? diag.severity : (typeof diag.disease === 'object' && diag.disease?.severity ? diag.disease.severity : null)) || (isHealthy ? 'Low' : 'High');
   const riskLevel = diag.riskLevel || severity;
   const affectedArea = diag.affectedArea || (isHealthy ? '2-5%' : '25-40%');
   const scanTime = diag.scanTime || diag.createdAt || new Date().toLocaleString();
