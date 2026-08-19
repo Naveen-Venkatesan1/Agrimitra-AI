@@ -25,7 +25,12 @@ app = FastAPI(title="AgriMitra AI Backend Engine")
 # Enable CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://agrimitra-ai-theta.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -400,8 +405,7 @@ async def analyze_crop_health(file: UploadFile = File(...)):
                     "https://plant.id/api/v3/identification",
                     json={
                         "images": [encoded_string], 
-                        "health": "all",
-                        "plant_details": ["common_names", "url", "description"]
+                        "health": "all"
                     },
                     headers={"Api-Key": plant_id_key, "Content-Type": "application/json"},
                     timeout=10
