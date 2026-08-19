@@ -369,21 +369,30 @@ async def analyze_crop_health(file: UploadFile = File(...)):
             local_disease = "Early Blight"
             local_confidence = 0.88
 
-        # 3. OPTIONAL PLANT.ID ENRICHMENT (IF VALID KEY AVAILABLE)
+        # 3. STRICT PLANT.ID ENRICHMENT
         plant_id_key = os.environ.get("PLANT_ID_API_KEY")
         if not plant_id_key or plant_id_key == 'YOUR_PLANT_ID_API_KEY_HERE':
+            # Check if it's in .env just in case it wasn't loaded
             if os.path.exists(env_path):
                 with open(env_path) as f:
                     for line in f:
                         if line.strip() and not line.startswith('#'):
                             try:
                                 key, val = line.strip().split('=', 1)
-                                os.environ[key.strip()] = val.strip().strip('"').strip("'")
+                                if key.strip() == "PLANT_ID_API_KEY":
+                                    plant_id_key = val.strip().strip('"').strip("'")
                             except ValueError:
                                 pass
-            plant_id_key = os.environ.get("PLANT_ID_API_KEY")
 
-        corroborated = False
+        pid_species = None
+        pid_species_conf = 0.0
+        pid_health = None
+        pid_health_conf = 0.0
+        pid_is_healthy = False
+        pid_used = False
+        verification_status = "ML_ONLY"
+        verification_message = "Plant.id verification was not available or not configured."
+
         if plant_id_key and len(plant_id_key) > 10 and plant_id_key != 'YOUR_PLANT_ID_API_KEY_HERE':
             try:
                 encoded_string = base64.b64encode(content).decode('utf-8')
@@ -395,36 +404,76 @@ async def analyze_crop_health(file: UploadFile = File(...)):
                         "plant_details": ["common_names", "url", "description"]
                     },
                     headers={"Api-Key": plant_id_key, "Content-Type": "application/json"},
-                    timeout=8
+                    timeout=10
                 )
                 if pid_response.status_code in [200, 201]:
+                    pid_used = True
                     pid_data = pid_response.json()
                     res = pid_data.get("result", {})
-                    # If plant id has plant classification
+                    
+                    # Classification / Species
                     suggestions = res.get("classification", {}).get("suggestions", [])
                     if suggestions:
-                        c_names = suggestions[0].get("details", {}).get("common_names", [])
+                        top_s = suggestions[0]
+                        pid_species_conf = top_s.get("probability", 0.0)
+                        c_names = top_s.get("details", {}).get("common_names", [])
                         if c_names:
-                            local_crop = c_names[0]
+                            pid_species = c_names[0]
+                        else:
+                            pid_species = top_s.get("name")
+                            
                     # Health
                     health_res = res.get("health", {})
                     if health_res.get("is_healthy", {}).get("binary"):
-                        is_healthy = True
+                        pid_is_healthy = True
+                        pid_health = "Healthy"
+                        pid_health_conf = health_res.get("is_healthy", {}).get("probability", 1.0)
+                        
                     dis_list = health_res.get("diseases", [])
                     if dis_list:
                         dis_list.sort(key=lambda x: x.get("probability", 0), reverse=True)
                         top_d = dis_list[0]
-                        if top_d.get("probability", 0) > 0.4:
-                            local_disease = top_d.get("name", local_disease)
-                            local_confidence = max(local_confidence, float(top_d.get("probability", 0)))
-                            corroborated = True
+                        if not pid_is_healthy or top_d.get("probability", 0) > pid_health_conf:
+                            pid_health = top_d.get("name")
+                            pid_health_conf = top_d.get("probability", 0.0)
+                            pid_is_healthy = False
+                elif pid_response.status_code == 401:
+                    verification_message = "Plant.id authentication failed. Check the backend API configuration."
+                else:
+                    verification_message = f"Plant.id API error: {pid_response.status_code}"
+            except requests.Timeout:
+                verification_message = "Plant.id verification is temporarily unavailable (timeout)."
             except Exception as e:
-                logging.warning(f"[PLANT.ID ENRICHMENT] Safe non-blocking warning: {e}")
+                logging.warning(f"[PLANT.ID ENRICHMENT] Error: {e}")
+                verification_message = "Plant.id verification failed due to an internal error."
 
+        # VERIFICATION LOGIC (AGREEMENT / DISAGREEMENT)
+        final_crop = local_crop
+        final_disease = local_disease
+        final_confidence = local_confidence
+        
+        if pid_used:
+            # Check agreement
+            local_dis_lower = local_disease.lower()
+            pid_dis_lower = (pid_health or "").lower()
+            
+            # Simple substring matching for agreement
+            if (local_dis_lower in pid_dis_lower or pid_dis_lower in local_dis_lower) or (is_healthy and pid_is_healthy):
+                verification_status = "AGREEMENT"
+                verification_message = "Local ML model and Plant.id verification agree on the diagnosis."
+                final_disease = local_disease
+                final_confidence = max(local_confidence, pid_health_conf)
+                is_healthy = True if (is_healthy and pid_is_healthy) else is_healthy
+            else:
+                verification_status = "MODEL_DISAGREEMENT"
+                verification_message = "The local ML model and Plant.id returned different results. Manual verification is recommended."
+                # Don't invent a diagnosis on disagreement, we keep local_disease as primary but the status warns the user.
+        else:
+            verification_status = "ML_ONLY"
+            
         # 4. AGRONOMIC KNOWLEDGE BASE LOOKUP
         kb_info = disease_kb.get(detected_raw_class)
         if not kb_info:
-            # Fallback search by disease name
             for k, v in disease_kb.items():
                 if local_disease.lower() in k.lower() or k.lower() in local_disease.lower():
                     kb_info = v
@@ -432,17 +481,17 @@ async def analyze_crop_health(file: UploadFile = File(...)):
         if not kb_info:
             kb_info = disease_kb.get("Tomato___Early_blight", {})
 
-        symptoms = kb_info.get("Symptoms", f"Observed characteristic symptoms of {local_disease} on crop foliage.")
+        symptoms = kb_info.get("Symptoms", f"Observed characteristic symptoms of {final_disease} on crop foliage.")
         cause = kb_info.get("Cause", "Fungal/bacterial pathogen or environmental stress condition.")
         bio_treat = kb_info.get("Biological Treatment", "Apply bio-control agent (Trichoderma viride or Bacillus subtilis @ 5g/L).")
-        chem_treat = kb_info.get("Chemical Treatment", "Apply standard fungicide/bactericide according to manufacturer dosage.")
+        chem_treat = kb_info.get("Chemical Treatment", "Apply standard fungicide/bactericide according to manufacturer dosage. ALWAYS verify label instructions.")
         cultural = kb_info.get("Cultural Management", "Maintain field sanitation, proper plant spacing, and clean weed borders.")
         prevention = kb_info.get("Prevention Tips", "Practice regular crop scouting and avoid overhead sprinkler irrigation.")
         future_prev = kb_info.get("Future Prevention", "Select disease-resistant cultivars and practice crop rotation.")
         recovery_est = kb_info.get("recovery_estimate", {"minimum_days": 7, "maximum_days": 14, "conditions": ["Optimal treatment application"]})
 
-        severity = "Low" if is_healthy else ("High" if local_confidence > 0.80 else "Moderate")
-        health_score = 95 if is_healthy else max(35, int(100 - (local_confidence * 55)))
+        severity = "Low" if is_healthy else ("High" if final_confidence > 0.80 else "Moderate")
+        health_score = 95 if is_healthy else max(35, int(100 - (final_confidence * 55)))
         health_rating = "Healthy" if is_healthy else ("Poor" if severity == "High" else "Moderate")
         
         pred_time = round(time.time() - start_time, 2)
@@ -451,18 +500,53 @@ async def analyze_crop_health(file: UploadFile = File(...)):
             os.remove(temp_file_path)
 
         diagnosis = {
+            # STRICT SCHEMA AS REQUESTED
+            "success": True,
+            "crop": {
+                "name": final_crop,
+                "confidence": local_confidence
+            },
+            "disease": {
+                "name": "Healthy Plant" if is_healthy else final_disease,
+                "confidence": final_confidence,
+                "severity": severity
+            },
+            "local_ml": {
+                "prediction": local_disease,
+                "confidence": local_confidence
+            },
+            "plant_id": {
+                "species": pid_species or "Unknown",
+                "species_confidence": pid_species_conf,
+                "health_assessment": pid_health or "Unknown",
+                "health_confidence": pid_health_conf
+            },
+            "verification": {
+                "status": verification_status,
+                "message": verification_message
+            },
+            "recommendations": {
+                "biological": [bio_treat] if isinstance(bio_treat, str) else bio_treat,
+                "chemical": [chem_treat] if isinstance(chem_treat, str) else chem_treat,
+                "preventive": [prevention] if isinstance(prevention, str) else prevention
+            },
+            "source": {
+                "local_model": True,
+                "plant_id": pid_used,
+                "knowledge_base": True
+            },
+            
+            # LEGACY FIELDS FOR FRONTEND COMPATIBILITY
             "analysisId": f"analysis_{int(time.time())}",
             "analysis_id": f"analysis_{int(time.time())}",
-            "crop": local_crop,
-            "cropName": local_crop,
-            "crop_name": local_crop,
-            "disease": "Healthy Plant" if is_healthy else local_disease,
-            "diseaseName": "Healthy Plant" if is_healthy else local_disease,
-            "disease_name": "Healthy Plant" if is_healthy else local_disease,
+            "cropName": final_crop,
+            "crop_name": final_crop,
+            "diseaseName": "Healthy Plant" if is_healthy else final_disease,
+            "disease_name": "Healthy Plant" if is_healthy else final_disease,
             "diseaseCategory": "Healthy" if is_healthy else "Infectious Disease / Pest Damage",
             "disease_category": "Healthy" if is_healthy else "Infectious Disease / Pest Damage",
-            "confidence": f"{(local_confidence * 100):.2f}%",
-            "confidence_score": round(local_confidence, 4),
+            "confidence": f"{(final_confidence * 100):.2f}%",
+            "confidence_score": round(final_confidence, 4),
             "healthScore": health_score,
             "health_score": health_score,
             "healthRating": health_rating,
@@ -473,42 +557,27 @@ async def analyze_crop_health(file: UploadFile = File(...)):
             "affectedArea": "0%" if is_healthy else ("25-40%" if severity == "High" else "10-20%"),
             "affected_area": "0%" if is_healthy else ("25-40%" if severity == "High" else "10-20%"),
             
-            # Authoritative Treatments & Agronomic Guidance
             "symptoms": symptoms,
             "cause": cause,
             "biologicalTreatment": [bio_treat] if isinstance(bio_treat, str) else bio_treat,
-            "biological_treatment": [bio_treat] if isinstance(bio_treat, str) else bio_treat,
             "chemicalTreatment": [chem_treat] if isinstance(chem_treat, str) else chem_treat,
-            "chemical_treatment": [chem_treat] if isinstance(chem_treat, str) else chem_treat,
             "culturalManagement": [cultural] if isinstance(cultural, str) else cultural,
-            "cultural_management": [cultural] if isinstance(cultural, str) else cultural,
             "immediatePrecautions": [kb_info.get("Immediate Precautions", "Isolate and prune infected leaves immediately.")],
-            "immediate_precautions": [kb_info.get("Immediate Precautions", "Isolate and prune infected leaves immediately.")],
             "prevention": [prevention] if isinstance(prevention, str) else prevention,
             "futurePrevention": future_prev,
-            "future_prevention": future_prev,
             
             "treatment": chem_treat,
             "medicine": chem_treat,
             "organicSolution": bio_treat,
-            "organic_solution": bio_treat,
             "recoveryTimeline": f"{recovery_est.get('minimum_days', 7)}-{recovery_est.get('maximum_days', 14)} Days" if not is_healthy else "0 Days (Healthy)",
-            "recovery_timeline": f"{recovery_est.get('minimum_days', 7)}-{recovery_est.get('maximum_days', 14)} Days" if not is_healthy else "0 Days (Healthy)",
-            "recovery_estimate": recovery_est,
             "recoveryAdvice": kb_info.get("Recovery Advice", "Continue routine monitoring and avoid excess moisture."),
             "nextScanReminder": "In 5 Days" if not is_healthy else "In 14 Days",
             
-            # Diagnostic Metadata
             "recommendationSource": "ICAR / CIBRC Authoritative Agricultural Data",
-            "recommendation_source": "ICAR / CIBRC Authoritative Agricultural Data",
-            "diagnosisSource": "AgriMitra Master ML Model" + (" + Plant.id Verified" if corroborated else ""),
-            "diagnosis_source": "AgriMitra Master ML Model" + (" + Plant.id Verified" if corroborated else ""),
+            "diagnosisSource": "AgriMitra ML + Plant.id" if pid_used else "AgriMitra ML",
             "modelVersion": "MobileNetV2 Master Crop Model v1.0",
-            "model_version": "MobileNetV2 Master Crop Model v1.0",
             "predictionTime": pred_time,
-            "prediction_time": pred_time,
-            "top3": top3_formatted,
-            "top_3_predictions": top3_formatted
+            "top3": top3_formatted
         }
         
         return {"success": True, **diagnosis}

@@ -186,6 +186,32 @@ export const CropIntelligenceReport = () => {
             </div>
           </Card>
 
+          {/* 2.5. Verification Status */}
+          {diag.verification && (
+            <Card hover={false} className="p-5 printable-card">
+              <div className={`p-4 rounded-xl border ${diag.verification.status === 'MODEL_DISAGREEMENT' ? 'bg-amber-50/80 border-amber-200' : (diag.verification.status === 'AGREEMENT' ? 'bg-emerald-50/80 border-emerald-200' : 'bg-gray-50/80 border-gray-200')}`}>
+                <h3 className={`text-xs font-bold uppercase tracking-wider block mb-2 flex items-center gap-1.5 ${diag.verification.status === 'MODEL_DISAGREEMENT' ? 'text-amber-800' : (diag.verification.status === 'AGREEMENT' ? 'text-emerald-800' : 'text-gray-700')}`}>
+                  {diag.verification.status === 'MODEL_DISAGREEMENT' ? '⚠️ VERIFICATION DISAGREEMENT' : (diag.verification.status === 'AGREEMENT' ? '✓ VERIFIED AGREEMENT' : '🔍 VERIFICATION STATUS')}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-800 font-medium leading-relaxed mb-3">
+                  {diag.verification.message}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <span className="block text-[10px] text-gray-500 font-bold uppercase mb-1">Local ML Result</span>
+                    <span className="font-bold text-gray-900 text-sm">{diag.local_ml?.prediction || diag.disease}</span>
+                  </div>
+                  {diag.plant_id && (diag.plant_id.health_assessment !== 'Unknown' || diag.plant_id.species !== 'Unknown') && (
+                    <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                      <span className="block text-[10px] text-gray-500 font-bold uppercase mb-1">Plant.id Result</span>
+                      <span className="font-bold text-gray-900 text-sm">{diag.plant_id.health_assessment !== 'Unknown' ? diag.plant_id.health_assessment : diag.plant_id.species}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* 3. Immediate Precautions */}
           <Card hover={false} className="p-5 printable-card">
             <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200">

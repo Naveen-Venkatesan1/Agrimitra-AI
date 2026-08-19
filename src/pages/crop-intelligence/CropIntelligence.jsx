@@ -506,7 +506,31 @@ export const CropIntelligence = () => {
                   </div>
                 )}
 
-                {/* D. Short Immediate Summary */}
+                {/* D. Verification Status */}
+                {analysisResult.verification && (
+                  <div className={`p-3.5 rounded-xl border ${analysisResult.verification.status === 'MODEL_DISAGREEMENT' ? 'bg-amber-50/80 border-amber-200' : (analysisResult.verification.status === 'AGREEMENT' ? 'bg-emerald-50/80 border-emerald-200' : 'bg-gray-50/80 border-gray-200')}`}>
+                    <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${analysisResult.verification.status === 'MODEL_DISAGREEMENT' ? 'text-amber-800' : (analysisResult.verification.status === 'AGREEMENT' ? 'text-emerald-800' : 'text-gray-700')}`}>
+                      {analysisResult.verification.status === 'MODEL_DISAGREEMENT' ? '⚠️ VERIFICATION DISAGREEMENT' : (analysisResult.verification.status === 'AGREEMENT' ? '✓ VERIFIED AGREEMENT' : '🔍 VERIFICATION STATUS')}
+                    </span>
+                    <p className="text-xs text-gray-700 leading-relaxed font-medium mb-2">
+                      {analysisResult.verification.message}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-white p-2 rounded-lg border border-gray-100">
+                        <span className="block text-[10px] text-gray-400 font-bold uppercase">Local ML Result</span>
+                        <span className="font-semibold text-gray-800">{analysisResult.local_ml?.prediction || analysisResult.disease}</span>
+                      </div>
+                      {analysisResult.plant_id && (analysisResult.plant_id.health_assessment !== 'Unknown' || analysisResult.plant_id.species !== 'Unknown') && (
+                        <div className="bg-white p-2 rounded-lg border border-gray-100">
+                          <span className="block text-[10px] text-gray-400 font-bold uppercase">Plant.id Result</span>
+                          <span className="font-semibold text-gray-800">{analysisResult.plant_id.health_assessment !== 'Unknown' ? analysisResult.plant_id.health_assessment : analysisResult.plant_id.species}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* E. Short Immediate Summary */}
                 <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100">
                   <p className="text-xs text-emerald-950 font-medium leading-relaxed">
                     Your leaf sample shows symptoms associated with <strong>{analysisResult.disease}</strong> ({analysisResult.crop}). Click below to view the comprehensive recommendation report detailing bio-remedies, chemical treatments, recovery timeline, and future prevention.
