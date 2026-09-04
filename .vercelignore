@@ -1,0 +1,11 @@
+/backend/
+/crop datas/
+/data/
+/dasboard images/
+/node_modules/
+/.git/
+__pycache__/
+*.pyc
+*.h5
+*.pkl
+*.keras

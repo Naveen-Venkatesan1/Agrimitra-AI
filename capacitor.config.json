@@ -1,0 +1,12 @@
+{
+  "appId": "com.agrimitra.app",
+  "appName": "AgriMitra",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

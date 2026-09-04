@@ -1,0 +1,5 @@
+Crop Yield Model Evaluation Report (v1)
+==================================================
+
+RMSE:  14533.7426
+R2 Score: 0.9709

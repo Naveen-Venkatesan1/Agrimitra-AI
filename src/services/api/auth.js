@@ -1,0 +1,182 @@
+import { 
+  auth,
+  loginWithEmail, 
+  registerWithEmail, 
+  loginWithGoogle, 
+  resetPassword as sendFirebaseResetPassword, 
+  logoutFirebase,
+  onAuthStateChanged
+} from '../../config/firebase';
+
+const DIRECT_USERS_KEY = 'agrimitra_direct_users';
+
+export const authApi = {
+  async login({ email, password }) {
+    // 1. Check local direct accounts registry
+    try {
+      const directUsers = JSON.parse(localStorage.getItem(DIRECT_USERS_KEY) || '[]');
+      const userMatch = directUsers.find(
+        (u) => u.email?.toLowerCase() === email?.toLowerCase() && (!password || u.password === password)
+      );
+
+      if (userMatch) {
+        const { password: _, ...userProfile } = userMatch;
+        return { success: true, user: userProfile };
+      }
+    } catch (e) {
+      console.warn('Direct user lookup warning:', e);
+    }
+
+    // 2. Fallback to Firebase email login if applicable
+    const result = await loginWithEmail(email, password);
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+    return {
+      success: true,
+      user: {
+        id: result.user.uid,
+        name: result.user.displayName || email.split('@')[0],
+        email: result.user.email,
+        role: 'farmer',
+        authMode: 'direct'
+      }
+    };
+  },
+
+  async signUp({ email, password, farmerName }) {
+    try {
+      const directUsers = JSON.parse(localStorage.getItem(DIRECT_USERS_KEY) || '[]');
+      const targetEmail = email || `${(farmerName || 'farmer').toLowerCase().replace(/\s+/g, '')}@agrimitra.ai`;
+
+      const existingUser = directUsers.find((u) => u.email?.toLowerCase() === targetEmail.toLowerCase());
+      if (existingUser) {
+        const { password: _, ...userProfile } = existingUser;
+        return { success: true, user: userProfile };
+      }
+
+      const newUser = {
+        id: `usr_direct_${Date.now()}`,
+        name: farmerName || targetEmail.split('@')[0] || 'Farmer User',
+        email: targetEmail,
+        password: password || 'defaultpass',
+        role: 'farmer',
+        state: 'Tamil Nadu',
+        district: 'Thanjavur',
+        authMode: 'direct',
+        onboardingCompleted: false,
+        createdAt: new Date().toISOString()
+      };
+
+      directUsers.push(newUser);
+      localStorage.setItem(DIRECT_USERS_KEY, JSON.stringify(directUsers));
+
+      const { password: _, ...userProfile } = newUser;
+      return { success: true, user: userProfile };
+    } catch (err) {
+      console.warn('Direct signup fallback warning:', err);
+      // Attempt Firebase register as fallback
+      const result = await registerWithEmail(email, password);
+      if (result.error) {
+        return { success: false, error: result.error };
+      }
+      return {
+        success: true,
+        user: {
+          id: result.user.uid,
+          name: farmerName || email.split('@')[0],
+          email: result.user.email,
+          role: 'farmer',
+          authMode: 'direct',
+          onboardingCompleted: false
+        }
+      };
+    }
+  },
+
+  async loginWithGoogle() {
+    const result = await loginWithGoogle();
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+    return { success: true, user: result.user };
+  },
+
+  async forgotPassword(email) {
+    const result = await sendFirebaseResetPassword(email);
+    return result;
+  },
+
+  async logout() {
+    const result = await logoutFirebase();
+    return result;
+  },
+
+  async sendEmailSignInLink(email) {
+    const { sendEmailSignInLink: sendLink } = await import('../../config/firebase');
+    return sendLink(email);
+  },
+
+  checkIsEmailSignInLink(url) {
+    try {
+      const { checkIsEmailSignInLink: checkLink } = require('../../config/firebase');
+      return checkLink(url);
+    } catch (e) {
+      return false;
+    }
+  },
+
+  async completeEmailSignInLink(email, url) {
+    const { completeEmailSignInLink: completeLink } = await import('../../config/firebase');
+    return completeLink(email, url);
+  },
+
+  async sendBackendPhoneOTP(phoneNumber) {
+    const cleanPhone = (phoneNumber || '').replace(/\D/g, '').slice(-10);
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone: cleanPhone })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.success === false) {
+        return {
+          success: false,
+          error: data.detail || data.error || data.message || 'Failed to send OTP via SMS provider.'
+        };
+      }
+      return {
+        success: true,
+        message: data.message || 'OTP sent successfully',
+        phone: cleanPhone
+      };
+    } catch (err) {
+      console.error('Backend send OTP error:', err);
+      return {
+        success: false,
+        error: 'Unable to connect to SMS service. Please check your connection and try again.'
+      };
+    }
+  },
+
+  async sendPhoneOTP(phoneNumber, containerId) {
+    const { sendPhoneOTP: sendOTP } = await import('../../config/firebase');
+    return sendOTP(phoneNumber, containerId);
+  },
+
+  async verifyPhoneOTP(confirmationResult, otpCode) {
+    const { verifyPhoneOTP: verifyOTP } = await import('../../config/firebase');
+    return verifyOTP(confirmationResult, otpCode);
+  },
+
+  onSessionChange(callback) {
+    return onAuthStateChanged(auth, (user) => {
+      callback(user);
+    });
+  }
+};
+

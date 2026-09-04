@@ -1,0 +1,97 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node & Large Data
+node_modules/
+dist/
+dist-ssr/
+datasets/
+data/
+crop datas/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.*
+backend/.env
+backend/.env.*
+
+# Keep the example
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+backend/training/
+backend/scripts/download_datasets.py
+backend/scripts/prepare_and_train_v2.py
+backend/test_image_difference.py
+backend/test_api_endpoints.py
+
+__pycache__/
+*.pyc
+*/__pycache__/*
+*/*/__pycache__/*
+test_lfs.pkl
+.vercel
+
+.vercel
+.env*
+
+# Local runtime files
+backend/database/*.db
+backend/database/*.db-shm
+backend/database/*.db-wal
+scratch/
+
+# Local test and runtime files
+scratch/
+*.test.*
+backend/test_*.pyntest_*.py
+verify_*.py
+backend/database/
+GoogleService-Info.plist
+google-services.json
+android/
+mobile/
+
+backend/test_*.json
+
+
+# Local test/reference artifacts
+backend/test_*.pyntest_*.pyntest_*.jsonnverify_*.pynscripts/test_*.mjsnDASSBOARD 2/
+FARM AI/
+models.json
+poor_image.jpg
+
+
+# Local test/reference files
+backend/test_*.py
+test_*.py
+scripts/test_*.mjs
+*.test.*
+verify_*.py
+backend/test_*.json
+
+# Local reference folders
+DASSBOARD 2/
+FARM AI/
+scratch/
+
+# Legacy unused LFS model
+backend/models/disease_model_v1.h5
+

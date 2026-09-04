@@ -1,0 +1,13 @@
+Soil Health Model Evaluation Report (v1)
+==================================================
+
+Accuracy:  0.7500
+
+              precision    recall  f1-score   support
+
+     Fertile       0.78      0.70      0.74        10
+ Non Fertile       0.73      0.80      0.76        10
+
+    accuracy                           0.75        20
+   macro avg       0.75      0.75      0.75        20
+weighted avg       0.75      0.75      0.75        20

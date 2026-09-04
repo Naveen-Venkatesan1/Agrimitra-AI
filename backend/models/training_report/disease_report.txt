@@ -1,0 +1,32 @@
+AgriMitra AI - Disease Detection Model Final Evaluation Report
+============================================================
+
+Training Date: 2026-08-08 05:49:35 UTC
+Class Count: 41
+Test Accuracy: 94.62%
+Precision:     0.9532
+Recall:        0.9463
+F1-Score:      0.9485
+
+Classification Report per Disease Class:
+------------------------------------------------------------
+                                                    precision    recall  f1-score   support
+
+                                Apple___Apple_scab       0.91      0.84      0.88        76
+                                 Apple___Black_rot       0.93      0.99      0.95        75
+                          Apple___Cedar_apple_rust       0.97      0.94      0.95        33
+                                   Apple___healthy       0.98      0.94      0.96       198
+                               Blueberry___healthy       0.99      0.99      0.99       181
+          Cherry_(including_sour)___Powdery_mildew       0.96      0.99      0.98       127
+                 Cherry_(including_sour)___healthy       1.00      0.98      0.99       103
+Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot       0.63      0.84      0.72        62
+                       Corn_(maize)___Common_rust_       1.00      1.00      1.00       143
+               Corn_(maize)___Northern_Leaf_Blight       0.89      0.75      0.81       119
+                            Corn_(maize)___healthy       1.00      1.00      1.00       140
+                                 Grape___Black_rot       0.96      0.92      0.94       142
+                      Grape___Esca_(Black_Measles)       0.95      0.98      0.96       167
+        Grape___Leaf_blight_(Isariopsis_Leaf_Spot)       0.94      1.00      0.97        34
+
+                                         micro avg       0.95      0.95      0.95      1600
+                                         macro avg       0.94      0.94      0.94      1600
+                                      weighted avg       0.95      0.95      0.95      1600
