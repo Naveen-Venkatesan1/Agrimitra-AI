@@ -6,10 +6,10 @@ import requests
 from typing import Dict, Any
 
 LYZR_URL = "https://agent-prod.studio.lyzr.ai/v3/inference/chat/"
-LYZR_API_KEY = os.getenv("LYZR_API_KEY", "sk-default-cbRdsZk3EiwMwaZ6uFCbuwWR2DchYaMt")
-LYZR_USER_ID = os.getenv("LYZR_USER_ID", "naveenmac24@gmail.com")
-LYZR_AGENT_ID = os.getenv("LYZR_AGENT_ID", "6a8eeccf61ed16830d4e9ddf")
-LYZR_SESSION_ID = os.getenv("LYZR_SESSION_ID", "6a8eeccf61ed16830d4e9ddf-4yqmgtqj")
+LYZR_API_KEY = os.getenv("LYZR_API_KEY", "")
+LYZR_USER_ID = os.getenv("LYZR_USER_ID", "")
+LYZR_AGENT_ID = os.getenv("LYZR_AGENT_ID", "")
+LYZR_SESSION_ID = os.getenv("LYZR_SESSION_ID", "")
 
 def analyze_with_lyzr(image_bytes: bytes, language: str = "English") -> Dict[str, Any]:
     """

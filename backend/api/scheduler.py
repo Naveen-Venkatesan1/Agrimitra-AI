@@ -17,12 +17,17 @@ _sent_notifications_cache = set()
 def scheduled_market_sync_job():
     """Scheduled cron execution at 06:00 IST for Market Intelligence prices."""
     try:
+        import os
+        if not os.environ.get("DATA_GOV_API_KEY"):
+            logger.info("Scheduled market sync skipped: DATA_GOV_API_KEY is not configured in environment.")
+            return
+
         logger.info("Executing scheduled Market Prices sync...")
         from backend.api.market.service import sync_market_prices
-        sync_market_prices()
-        logger.info("Scheduled Market Prices sync completed successfully.")
+        count = sync_market_prices()
+        logger.info(f"Scheduled Market Prices sync completed. Upserted records: {count}")
     except Exception as e:
-        logger.error(f"Scheduled Market Prices sync encountered an error: {e}")
+        logger.warning(f"Scheduled Market Prices sync encountered a non-fatal error: {e}")
 
 
 def check_and_trigger_irrigation_notifications():
@@ -35,7 +40,6 @@ def check_and_trigger_irrigation_notifications():
     
     db = get_firestore_client()
     if not db:
-        logger.warning("Firestore client unavailable. Skipping irrigation check.")
         return
 
     try:
@@ -175,20 +179,24 @@ def start_scheduler():
 
         # Perform Market Intelligence empty database check
         try:
+            import os
             from backend.api.market.database import get_db_connection
-            from backend.api.market.service import sync_market_prices
             with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(*) as count FROM market_master;")
                 count = cursor.fetchone()["count"]
             if count == 0:
-                logger.info("Market Intelligence database is empty. Triggering initial sync in background thread...")
-                thread = threading.Thread(target=sync_market_prices, daemon=True, name="MarketPricesInitialSync")
-                thread.start()
+                if os.environ.get("DATA_GOV_API_KEY"):
+                    logger.info("Market Intelligence database is empty. Triggering initial sync in background thread...")
+                    from backend.api.market.service import sync_market_prices
+                    thread = threading.Thread(target=sync_market_prices, daemon=True, name="MarketPricesInitialSync")
+                    thread.start()
+                else:
+                    logger.info("Market Intelligence database is empty. DATA_GOV_API_KEY not configured; skipping initial online sync.")
             else:
-                logger.info(f"Market Intelligence database has {count} markets. Skipping initial sync.")
+                logger.info(f"Market Intelligence database initialized with {count} verified market records.")
         except Exception as e:
-            logger.error(f"Error checking Market Intelligence database empty state: {e}")
+            logger.warning(f"Notice during Market Intelligence database check: {e}")
 
         return _scheduler
     except Exception as e:

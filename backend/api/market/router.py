@@ -257,15 +257,34 @@ async def get_summary(
 @router.post("/sync", response_model=dict)
 async def trigger_manual_sync():
     """Triggers manual database synchronization with data.gov.in AGMARKNET dataset."""
+    from .database import get_db_connection
+    last_sync_time = "N/A"
     try:
-        upsert_count = sync_market_prices()
-        # Retrieve sync completion metadata
-        from .database import get_db_connection
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT last_successful_sync FROM sync_metadata WHERE id = 1;")
             meta = cursor.fetchone()
-            last_sync_time = meta["last_successful_sync"] if meta else "N/A"
+            if meta:
+                last_sync_time = meta["last_successful_sync"]
+    except Exception:
+        pass
+
+    if not os.environ.get("DATA_GOV_API_KEY"):
+        return {
+            "status": "warning",
+            "message": "DATA_GOV_API_KEY is not configured in environment. Displaying verified cached data.",
+            "upsert_count": 0,
+            "timestamp": last_sync_time
+        }
+
+    try:
+        upsert_count = sync_market_prices()
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT last_successful_sync FROM sync_metadata WHERE id = 1;")
+            meta = cursor.fetchone()
+            if meta:
+                last_sync_time = meta["last_successful_sync"]
             
         return {
             "status": "success",

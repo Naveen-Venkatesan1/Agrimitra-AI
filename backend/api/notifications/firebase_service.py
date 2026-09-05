@@ -19,12 +19,15 @@ def get_firebase_app():
         private_key = os.environ.get("FIREBASE_PRIVATE_KEY")
 
         if not project_id or not client_email or not private_key:
-            logger.error("Firebase Admin SDK credentials not configured in environment variables.")
+            logger.warning("Firebase Admin SDK credentials not configured in environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY). Push notifications and cloud Firestore features will run in bypass mode.")
             return None
 
         try:
-            # Safely parse private key linebreaks and normalize PEM headers to exactly 5 hyphens
-            formatted_private_key = private_key.replace("\\n", "\n")
+            # Safely parse private key: handle surrounding quotes, escaped \n and normalize PEM headers
+            key = private_key.strip()
+            if (key.startswith('"') and key.endswith('"')) or (key.startswith("'") and key.endswith("'")):
+                key = key[1:-1].strip()
+            formatted_private_key = key.replace("\\n", "\n")
             if "BEGIN PRIVATE KEY" in formatted_private_key:
                 import re
                 formatted_private_key = re.sub(r'-*BEGIN PRIVATE KEY-*', '-----BEGIN PRIVATE KEY-----', formatted_private_key)
@@ -42,7 +45,7 @@ def get_firebase_app():
             logger.info("Firebase Admin SDK successfully initialized.")
             return app
         except Exception as e:
-            logger.error(f"Failed to initialize Firebase Admin app: {e}")
+            logger.warning(f"Firebase Admin app initialization bypassed (non-fatal): {e}")
             return None
 
 def get_firestore_client():
@@ -55,7 +58,7 @@ def get_firestore_client():
     try:
         return firestore.client()
     except Exception as e:
-        logger.error(f"Failed to get Firestore client: {e}")
+        logger.warning(f"Firestore client unavailable (non-fatal): {e}")
         return None
 
 def send_push_notification(token: str, title: str, body: str, data: dict = None) -> bool:

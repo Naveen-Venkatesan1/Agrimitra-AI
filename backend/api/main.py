@@ -19,21 +19,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 app = FastAPI(title="AgriMitra AI Backend Engine")
 
-@app.on_event("startup")
-async def startup_event():
-    from backend.api.notifications.firebase_service import get_firebase_app, get_firestore_client
-    app_ref = get_firebase_app()
-    if app_ref:
-        print("Firebase Admin SDK initialized successfully")
-        db = get_firestore_client()
-        if db:
-            print("Firestore client available")
-
 from backend.api.crop_intelligence.service import analyze_crop, chat_with_crop
 from backend.api.scheduler import start_scheduler, shutdown_scheduler
 from backend.api.assistant.router import router as assistant_router
 from backend.api.market.router import router as market_router
 from backend.api.auth.router import router as auth_router
+from backend.api.weather.router import router as weather_router
 
 # Enable CORS for React frontend
 app.add_middleware(
@@ -61,6 +52,9 @@ app.include_router(market_router)
 # Register Authentication / OTP Router
 app.include_router(auth_router)
 
+# Register Weather Intelligence Router
+app.include_router(weather_router)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Model directory with persistent volume / custom path support
 MODELS_DIR = os.environ.get("MODEL_STORAGE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or os.path.join(BASE_DIR, "..", "models")
@@ -83,10 +77,12 @@ if os.path.exists(env_path):
     except Exception as e:
         logging.error(f"Error loading environment variables: {e}")
 
-# Diagnostic logging for Firebase environment keys (safe checks only)
-print(f"FIREBASE_PROJECT_ID present: {'FIREBASE_PROJECT_ID' in os.environ}")
-print(f"FIREBASE_CLIENT_EMAIL present: {'FIREBASE_CLIENT_EMAIL' in os.environ}")
-print(f"FIREBASE_PRIVATE_KEY present: {'FIREBASE_PRIVATE_KEY' in os.environ}")
+# Diagnostic logging for environment keys (safe presence checks only, zero secret leakage)
+logging.info(f"FIREBASE_PROJECT_ID present: {bool(os.environ.get('FIREBASE_PROJECT_ID'))}")
+logging.info(f"FIREBASE_CLIENT_EMAIL present: {bool(os.environ.get('FIREBASE_CLIENT_EMAIL'))}")
+logging.info(f"FIREBASE_PRIVATE_KEY present: {bool(os.environ.get('FIREBASE_PRIVATE_KEY'))}")
+logging.info(f"DATA_GOV_API_KEY present: {bool(os.environ.get('DATA_GOV_API_KEY'))}")
+logging.info(f"GEMINI_API_KEY present: {bool(os.environ.get('GEMINI_API_KEY'))}")
 
 # Paths
 CROP_MODEL_PATH = os.path.join(MODELS_DIR, "crop_model_v1.pkl")
@@ -126,12 +122,13 @@ async def load_resources():
     """
     Production startup:
     Crop Intelligence uses Gemini Vision API.
+    Initializes lightweight KB, Firebase SDK (if configured), and background scheduler.
     No local ML models are downloaded or loaded.
     """
     global disease_kb
 
     try:
-        # Load only the lightweight disease knowledge base if available
+        # 1. Load lightweight disease knowledge base if available
         if os.path.exists(DISEASE_KB_PATH):
             with open(DISEASE_KB_PATH, "r", encoding="utf-8") as f:
                 disease_kb = json.load(f)
@@ -141,15 +138,31 @@ async def load_resources():
                 f"{len(disease_kb)} entries"
             )
 
+        # 2. Safely initialize Firebase Admin SDK / Firestore if credentials exist
+        try:
+            from backend.api.notifications.firebase_service import get_firebase_app, get_firestore_client
+            app_ref = get_firebase_app()
+            if app_ref:
+                logging.info("[FIREBASE] Admin SDK initialized successfully")
+                db = get_firestore_client()
+                if db:
+                    logging.info("[FIRESTORE] Client connected and ready")
+            else:
+                logging.info("[FIREBASE] Running in local/bypass mode (credentials not configured)")
+        except Exception as fb_err:
+            logging.warning(f"[FIREBASE] Notice during initialization: {fb_err}")
+
         logging.info("=" * 60)
-        logging.info("AGRIMITRA AI BACKEND STARTUP")
-        logging.info("Crop Intelligence: Gemini Vision API")
-        logging.info("Crop Chat: Gemini API")
+        logging.info("AGRIMITRA AI PRODUCTION BACKEND READY")
+        logging.info("Crop Intelligence: Google Gemini Vision API")
+        logging.info("Crop Chat: Google Gemini API")
+        logging.info(f"Gemini API Key: {'Configured' if os.environ.get('GEMINI_API_KEY') else 'Missing'}")
+        logging.info(f"Market Sync Key: {'Configured' if os.environ.get('DATA_GOV_API_KEY') else 'Optional (Bypassed)'}")
         logging.info("Local ML Models: DISABLED")
         logging.info("Model Downloads: DISABLED")
         logging.info("=" * 60)
 
-        # Start background scheduler
+        # 3. Start background scheduler (isolated jobs)
         try:
             start_scheduler()
             logging.info("[SCHEDULER] Started successfully")
@@ -157,7 +170,7 @@ async def load_resources():
             logging.warning(f"[SCHEDULER] Could not start: {e}")
 
     except Exception as e:
-        logging.exception("[STARTUP] Error loading backend resources")
+        logging.exception("[STARTUP] Error during backend resource loading")
 
 
 @app.on_event("shutdown")
@@ -301,8 +314,9 @@ def validate_image_quality(filepath: str):
 async def health_check():
     return {
         "status": "healthy",
-        "service": "agrimitra-ml",
-        "model_loaded": disease_model is not None
+        "service": "agrimitra-ai",
+        "crop_intelligence": "gemini",
+        "local_ml": False
     }
 
 

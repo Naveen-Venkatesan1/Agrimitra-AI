@@ -18,8 +18,8 @@ def sync_market_prices():
     resource_id = os.environ.get("DATA_GOV_RESOURCE_ID", "9ef84268-d588-465a-a308-a864a43d0070")
     
     if not api_key:
-        logger.error("DATA_GOV_API_KEY is not set in the environment.")
-        raise Exception("DATA_GOV_API_KEY is missing from environment variables.")
+        logger.warning("DATA_GOV_API_KEY is not configured in the environment. Skipping market price synchronization. Existing market data will be served.")
+        return 0
         
     url = f"https://api.data.gov.in/resource/{resource_id}"
     headers = {
@@ -175,15 +175,18 @@ def sync_market_prices():
         logger.info(f"Market Sync Complete. Upserted: {successful_inserts}, Rejected: {rejected_records}")
         return successful_inserts
     except Exception as exc:
-        logger.error(f"Market Sync Failed: {exc}")
-        with get_db_connection() as conn:
-            conn.execute("""
-                UPDATE sync_metadata 
-                SET status = 'FAILED', error_message = ?
-                WHERE id = 1;
-            """, (str(exc),))
-            conn.commit()
-        raise exc
+        logger.warning(f"Market Sync could not complete: {exc}")
+        try:
+            with get_db_connection() as conn:
+                conn.execute("""
+                    UPDATE sync_metadata 
+                    SET status = 'FAILED', error_message = ?
+                    WHERE id = 1;
+                """, (str(exc),))
+                conn.commit()
+        except Exception as db_err:
+            logger.warning(f"Failed to record sync error metadata: {db_err}")
+        return 0
 
 def get_days_ago_str(date_str: str) -> str:
     """Calculates freshness duration relative to Asia/Kolkata timezone."""

@@ -8,6 +8,8 @@
 import { getLocationCoordinates } from '../../data/indiaLocations';
 import { analyzeWeatherForCrop } from './weatherCropAnalysis';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 /**
  * Map standard WMO weather codes to human-readable agricultural conditions
  */
@@ -126,7 +128,6 @@ const generateAgriInsights = (currentData, dailyData, wmoInfo, districtName, use
  * Fetch real-time current weather & 7-day daily forecast from Open-Meteo
  */
 const fetchLiveWeather = async (districtName = "Thanjavur", stateName = "Tamil Nadu", userCrop = null, cropStage = null, parentSignal = null) => {
-  let lat, lon, locName;
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => abortController.abort(), 8000);
   
@@ -137,6 +138,47 @@ const fetchLiveWeather = async (districtName = "Thanjavur", stateName = "Tamil N
     });
   }
 
+  // 1. Primary: Call AgriMitra Backend Weather Endpoint
+  try {
+    const params = new URLSearchParams();
+    if (districtName) params.append('district', districtName);
+    if (stateName) params.append('state', stateName);
+    if (userCrop) params.append('crop', userCrop);
+    if (cropStage) params.append('crop_stage', cropStage);
+
+    const backendRes = await fetch(`${API_BASE_URL}/api/weather?${params.toString()}`, {
+      signal: abortController.signal
+    });
+
+    if (backendRes.ok) {
+      const data = await backendRes.json();
+      const weatherData = data.weather || data;
+      if (weatherData && weatherData.temp != null) {
+        clearTimeout(timeoutId);
+        // Enrich intelligence if not already provided
+        if (!weatherData.intelligence) {
+          weatherData.intelligence = analyzeWeatherForCrop({
+            location: weatherData.locationName || `${districtName}, ${stateName}`,
+            crop: userCrop,
+            growthStage: cropStage,
+            temperature: weatherData.temp,
+            humidity: weatherData.humidity,
+            rainProbability: weatherData.rainProbabilityTomorrow,
+            rainfall: weatherData.rainfall,
+            windSpeedStr: weatherData.windSpeed,
+            windDirection: 0,
+            forecast7Day: weatherData.dailyForecast || []
+          });
+        }
+        return { weather: weatherData, error: null };
+      }
+    }
+  } catch (backendErr) {
+    console.debug("Backend weather endpoint bypassed, falling back to direct client meteorological fetch:", backendErr.message);
+  }
+
+  // 2. Fallback: Direct Meteorological Fetch
+  let lat, lon, locName;
   // Try geocoding first
   try {
     const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(districtName)}&admin1=${encodeURIComponent(stateName)}&country=India&count=1`;
