@@ -16,3 +16,4 @@ pytz>=2024.1
 firebase-admin>=6.5.0
 
 websockets
+google-genai
