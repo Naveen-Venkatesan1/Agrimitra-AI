@@ -62,7 +62,7 @@ export const cropApi = {
   async getCropRecommendations({ N = 50, P = 50, K = 50, temp = 28, humidity = 60, ph = 6.5, rainfall = 100 }) {
     // Tier 1: Try FastAPI Backend
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE_URL}/api/predict-crop`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,7 +133,7 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
       formData.append("file", file);
       formData.append("language", language);
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       
       const response = await fetch(`${API_BASE_URL}/api/crop-intelligence/analyze`, {
         method: 'POST',
@@ -143,7 +143,7 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
 
       if (!response.ok) {
         if (response.status === 503) {
-           return { success: false, error: "AI Engine Offline: Could not reach the Plant.id API backend." };
+           return { success: false, error: "AI Engine Offline: Could not reach the Crop Intelligence backend." };
         }
         const errData = await response.json().catch(() => ({}));
         return { success: false, error: errData.error || errData.message || `API error: ${response.status}` };
@@ -156,7 +156,7 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
       }
       
       // Handle explicit low confidence or validation failure
-      if (data.status === 'INVALID_IMAGE' || data.status === 'NOT_VERIFIED' || data.status === 'MODEL_DISAGREEMENT') {
+      if (data.isLowConfidence || data.status === 'INVALID_IMAGE' || data.status === 'NOT_VERIFIED' || data.status === 'UNVERIFIED_IMAGE' || data.status === 'MODEL_DISAGREEMENT') {
         return {
           success: true,
           isLowConfidence: true,
@@ -210,7 +210,7 @@ Provide the top 3 recommended crops for highest yield. Return JSON array of obje
 
   async chatWithCropAI(question, contextPayload, language = "English") {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE_URL}/api/crop-intelligence/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

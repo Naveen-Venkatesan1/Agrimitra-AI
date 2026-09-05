@@ -133,7 +133,7 @@ export const authApi = {
 
   async sendBackendPhoneOTP(phoneNumber) {
     const cleanPhone = (phoneNumber || '').replace(/\D/g, '').slice(-10);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
     try {
       const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
         method: 'POST',

@@ -1055,7 +1055,7 @@ export const AIAssistantMain = () => {
 
     if (sessionIdRef.current) {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
         await fetch(`${API_BASE_URL}/api/assistant/session/reset`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1093,7 +1093,7 @@ export const AIAssistantMain = () => {
     abortControllerRef.current = abortController;
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE_URL}/api/assistant/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

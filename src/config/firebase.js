@@ -38,20 +38,29 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 // AGRIMITRA AI Production Firebase Configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAmd92nFC3n9TiJjQIO2nwMft4-fHyW7UU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "agrimitra-ai-e8b74.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "agrimitra-ai-e8b74",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "agrimitra-ai-e8b74.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "775036005093",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:775036005093:web:0ceb496dc6f7cf31cd820c",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-LLZYYGH8KE"
 };
 
-// Initialize Firebase App
+// Initialize Firebase App safely
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Analytics (only works in browser environments)
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+// Initialize Analytics (only works in browser environments when measurementId is present)
+export const analytics = (typeof window !== 'undefined' && firebaseConfig.measurementId && firebaseConfig.projectId)
+  ? (() => {
+      try {
+        return getAnalytics(app);
+      } catch (err) {
+        console.warn("Firebase Analytics could not be initialized:", err);
+        return null;
+      }
+    })()
+  : null;
 
 // Initialize Firebase Services
 export const auth = getAuth(app);
@@ -283,10 +292,12 @@ export const uploadFileToStorage = async (file, folderPath = 'documents') => {
 
 // Initialize Firebase Messaging client safely
 let messagingClient = null;
-try {
-  messagingClient = getMessaging(app);
-} catch (err) {
-  console.warn("FCM client initialization bypassed/failed (possibly non-browser or disabled):", err);
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && firebaseConfig.projectId && firebaseConfig.messagingSenderId) {
+  try {
+    messagingClient = getMessaging(app);
+  } catch (err) {
+    console.warn("FCM client initialization bypassed/failed (possibly non-browser or disabled):", err);
+  }
 }
 
 export const messaging = messagingClient;

@@ -31,7 +31,10 @@ class GeminiLiveClient {
         });
 
         try {
-          const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
+          const defaultWs = import.meta.env.VITE_API_BASE_URL 
+            ? import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws') 
+            : (import.meta.env.PROD ? 'wss://agrimitra-ai-l207.onrender.com' : 'ws://localhost:8000');
+          const wsUrl = import.meta.env.VITE_WS_BASE_URL || defaultWs;
           this.ws = new WebSocket(`${wsUrl}/api/assistant/live`);
 
           this.ws.onopen = () => {

@@ -1,6 +1,6 @@
 import { NORMALIZED_SCHEMES } from '../../data/normalizedSchemes';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
 
 /**
  * Calculates ML Feature Match Score (0–99), Match Level, and Match Reason

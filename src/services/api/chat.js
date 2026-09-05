@@ -10,7 +10,7 @@ export const chatApi = {
       const districtName = contextObj?.district || 'Thanjavur';
       const cropName = contextObj?.crop || 'Unknown';
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       const currentSessionId = sessionId || window.currentChatSessionId || `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       if (!sessionId && !window.currentChatSessionId) {
         window.currentChatSessionId = currentSessionId;
