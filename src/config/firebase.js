@@ -58,8 +58,9 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
+googleProvider.addScope('openid');
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
@@ -78,6 +79,9 @@ export const formatFirebaseAuthError = (errorOrCode) => {
   }
   if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid' || msg.includes('api-key')) {
     return `Invalid Firebase API Key. Please verify VITE_FIREBASE_API_KEY in your .env.local file.`;
+  }
+  if (code === 'auth/invalid-credential' || msg.includes('invalid-credential') || msg.includes('userinfo') || msg.includes('INVALID_IDP_RESPONSE')) {
+    return `Google sign-in credentials could not be verified. Please ensure your Google account is authorized in the project settings, or try logging in again.`;
   }
   if (code === 'auth/popup-blocked' || msg.includes('popup-blocked')) {
     return `Google Sign-In popup was blocked by your browser. Please allow popups or use redirect.`;
@@ -100,7 +104,15 @@ export const formatFirebaseAuthError = (errorOrCode) => {
 // Authentication Helpers (In-App Popup Flow)
 export const loginWithGoogle = async () => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const provider = new GoogleAuthProvider();
+    provider.addScope('openid');
+    provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+    provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
+    const result = await signInWithPopup(auth, provider);
     if (result && result.user) {
       return { user: result.user, error: null, code: null };
     }

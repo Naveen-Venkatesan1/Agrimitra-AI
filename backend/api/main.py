@@ -6,7 +6,6 @@ import sqlite3
 import time
 import logging
 import numpy as np
-import joblib
 from datetime import datetime
 from typing import Optional, List, Dict
 
@@ -15,10 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import websockets
 import asyncio
 from pydantic import BaseModel
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -108,7 +103,6 @@ YIELD_MODEL_PATH = os.path.join(MODELS_DIR, "yield_model_v1.pkl")
 YIELD_ENCODER_PATH = os.path.join(MODELS_DIR, "yield_label_encoder_v1.pkl")
 FERTILIZER_MODEL_PATH = os.path.join(MODELS_DIR, "fertilizer_model_v2.pkl")
 FERTILIZER_ENCODER_PATH = os.path.join(MODELS_DIR, "fertilizer_label_encoder_v2.pkl")
-PEST_MODEL_PATH = os.path.join(MODELS_DIR, "pest_model_v1.keras")
 PEST_CLASSES_PATH = os.path.join(MODELS_DIR, "pest_classes.txt")
 
 # Global Resource Handles
@@ -129,136 +123,49 @@ pest_classes = []
 
 @app.on_event("startup")
 async def load_resources():
-    global crop_model, crop_encoder, disease_model, disease_classes, disease_config, disease_kb
-    global soil_model, soil_encoder, yield_model, yield_encoder
-    global fertilizer_model, fertilizer_encoder, pest_model, pest_classes
+    """
+    Production startup:
+    Crop Intelligence uses Gemini Vision API.
+    No local ML models are downloaded or loaded.
+    """
+    global disease_kb
+
     try:
-        # --- HUGGING FACE HUB / CLOUD MODEL AUTO-DOWNLOADER ---
-        def ensure_model_file(filepath: str, filename: str = None):
-            if filename is None:
-                filename = os.path.basename(filepath)
-            
-            # If file exists and is not an LFS pointer (> 500 bytes), skip download
-            if os.path.exists(filepath) and os.path.getsize(filepath) > 500:
-                logging.info(f"[MODEL CACHE] Found cached model: {filename} ({os.path.getsize(filepath):,} bytes)")
-                return True
-                
-            import urllib.request
-            hf_repo = os.environ.get("HF_MODEL_REPO", "Naveen-Venkatesan1/agrimitra-models")
-            hf_base = os.environ.get("MODEL_DOWNLOAD_BASE_URL", f"https://huggingface.co/{hf_repo}/resolve/main")
-            url = f"{hf_base}/{filename}"
-            
-            logging.info(f"[MODEL DOWNLOAD] Downloading {filename} from Hugging Face Hub: {url}")
-            try:
-                # 30 second timeout per model to prevent blocking healthcheck
-                req = urllib.request.Request(url, headers={"User-Agent": "Agrimitra-AI/1.0"})
-                with urllib.request.urlopen(req, timeout=30) as response, open(filepath, 'wb') as out_file:
-                    out_file.write(response.read())
-                logging.info(f"[MODEL DOWNLOAD] Successfully downloaded {filename} ({os.path.getsize(filepath):,} bytes)")
-                return True
-            except Exception as e:
-                logging.warning(f"[MODEL DOWNLOAD] Could not fetch {filename} from HF Hub: {e}")
-                # Fallback to direct raw endpoint if configured
-                fallback_url = f"https://raw.githubusercontent.com/Naveen-Venkatesan1/Agrimitra-AI/main/backend/models/{filename}"
-                try:
-                    req = urllib.request.Request(fallback_url, headers={"User-Agent": "Agrimitra-AI/1.0"})
-                    with urllib.request.urlopen(req, timeout=20) as response, open(filepath, 'wb') as out_file:
-                        out_file.write(response.read())
-                    logging.info(f"[MODEL DOWNLOAD] Successfully downloaded {filename} from fallback")
-                    return True
-                except Exception as fb_err:
-                    logging.error(f"[MODEL DOWNLOAD] All download attempts failed for {filename}: {fb_err}")
-                    return False
+        # Load only the lightweight disease knowledge base if available
+        if os.path.exists(DISEASE_KB_PATH):
+            with open(DISEASE_KB_PATH, "r", encoding="utf-8") as f:
+                disease_kb = json.load(f)
 
-        for model_path in [
-            CROP_MODEL_PATH, CROP_ENCODER_PATH, DISEASE_MODEL_PATH,
-            DISEASE_CLASSES_PATH, DISEASE_CONFIG_PATH,
-            SOIL_MODEL_PATH, SOIL_ENCODER_PATH, YIELD_MODEL_PATH, YIELD_ENCODER_PATH,
-            FERTILIZER_MODEL_PATH, FERTILIZER_ENCODER_PATH, PEST_MODEL_PATH
-        ]:
-            try:
-                ensure_model_file(model_path)
-            except Exception as e:
-                logging.error(f"[MODEL ISOLATION] Failed to ensure model {model_path}: {e}")
-        # ------------------------------------------------------
+            logging.info(
+                f"[CROP INTELLIGENCE] Disease Knowledge Base loaded: "
+                f"{len(disease_kb)} entries"
+            )
 
-        try:
-            if os.path.exists(CROP_MODEL_PATH) and os.path.exists(CROP_ENCODER_PATH):
-                crop_model = joblib.load(CROP_MODEL_PATH)
-                crop_encoder = joblib.load(CROP_ENCODER_PATH)
-                logging.info(f"Loaded Crop Model from {CROP_MODEL_PATH}")
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Crop Model failed: {e}")
-            
-        try:
-            if os.path.exists(DISEASE_CLASSES_PATH):
-                with open(DISEASE_CLASSES_PATH, "r", encoding="utf-8") as f:
-                    disease_classes = [line.strip() for line in f.readlines() if line.strip()]
-                    
-            if os.path.exists(DISEASE_CONFIG_PATH):
-                with open(DISEASE_CONFIG_PATH, "r", encoding="utf-8") as f:
-                    disease_config = json.load(f)
-                    
-            if os.path.exists(DISEASE_MODEL_PATH):
-                disease_model = load_model(DISEASE_MODEL_PATH)
-                logging.info("="*60)
-                logging.info("CROP DISEASE ML MODEL LOADED SUCCESSFULLY")
-                logging.info(f"Model Path: {DISEASE_MODEL_PATH}")
-                logging.info(f"Number of Classes: {len(disease_classes)}")
-                logging.info(f"Preprocessing Method: tf.keras.applications.mobilenet_v2.preprocess_input")
-                logging.info("="*60)
-            else:
-                logging.warning(f"Disease model file not found yet at: {DISEASE_MODEL_PATH}")
-                
-            if os.path.exists(DISEASE_KB_PATH):
-                with open(DISEASE_KB_PATH, "r", encoding="utf-8") as f:
-                    disease_kb = json.load(f)
-                logging.info(f"Loaded Disease Knowledge Base with {len(disease_kb)} entries")
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Disease Model failed: {e}")
-            
-        try:
-            if os.path.exists(SOIL_MODEL_PATH) and os.path.exists(SOIL_ENCODER_PATH):
-                soil_model = joblib.load(SOIL_MODEL_PATH)
-                soil_encoder = joblib.load(SOIL_ENCODER_PATH)
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Soil Model failed: {e}")
-            
-        try:
-            if os.path.exists(YIELD_MODEL_PATH) and os.path.exists(YIELD_ENCODER_PATH):
-                yield_model = joblib.load(YIELD_MODEL_PATH)
-                yield_encoder = joblib.load(YIELD_ENCODER_PATH)
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Yield Model failed: {e}")
-            
-        try:
-            if os.path.exists(FERTILIZER_MODEL_PATH) and os.path.exists(FERTILIZER_ENCODER_PATH):
-                fertilizer_model = joblib.load(FERTILIZER_MODEL_PATH)
-                fertilizer_encoder = joblib.load(FERTILIZER_ENCODER_PATH)
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Fertilizer Model failed: {e}")
-            
-        try:
-            if os.path.exists(PEST_MODEL_PATH):
-                pest_model = load_model(PEST_MODEL_PATH)
-            if os.path.exists(PEST_CLASSES_PATH):
-                with open(PEST_CLASSES_PATH, "r", encoding="utf-8") as f:
-                    pest_classes = [line.strip() for line in f.readlines() if line.strip()]
-        except Exception as e:
-            logging.error(f"[MODEL ISOLATION] Pest Model failed: {e}")
-                
-        # Start Background APScheduler (Smart Irrigation + Market Prices)
+        logging.info("=" * 60)
+        logging.info("AGRIMITRA AI BACKEND STARTUP")
+        logging.info("Crop Intelligence: Gemini Vision API")
+        logging.info("Crop Chat: Gemini API")
+        logging.info("Local ML Models: DISABLED")
+        logging.info("Model Downloads: DISABLED")
+        logging.info("=" * 60)
+
+        # Start background scheduler
         try:
             start_scheduler()
+            logging.info("[SCHEDULER] Started successfully")
         except Exception as e:
-            logging.error(f"[MODEL ISOLATION] start_scheduler failed: {e}")
-                
+            logging.warning(f"[SCHEDULER] Could not start: {e}")
+
     except Exception as e:
-        logging.exception("Error loading backend resources:")
+        logging.exception("[STARTUP] Error loading backend resources")
+
 
 @app.on_event("shutdown")
 async def shutdown_resources():
-    shutdown_scheduler()
+    try:
+        shutdown_scheduler()
+    except Exception as e:
+        logging.warning(f"[SCHEDULER] Shutdown warning: {e}")
 
 
 def compute_plant_health_score(disease_name: str, confidence: float, severity: str):

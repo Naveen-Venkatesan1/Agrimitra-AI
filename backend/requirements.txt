@@ -1,7 +1,5 @@
 fastapi==0.110.0
 uvicorn==0.28.0
-scikit-learn==1.4.1.post1
-tensorflow==2.15.0
 pandas==2.2.1
 numpy==1.26.4
 python-multipart==0.0.9
@@ -9,8 +7,6 @@ pydantic==2.6.4
 sqlalchemy==2.0.28
 requests==2.31.0
 Pillow==10.2.0
-google-generativeai==0.4.1
-huggingface-hub>=0.20.0
 apscheduler>=3.10.0
 pytz>=2024.1
 firebase-admin>=6.5.0

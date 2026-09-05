@@ -9,6 +9,12 @@ __pycache__/
 *.pyc
 datasets/
 test_images/
-backend/models/
 data/
 crop datas/
+backend/models/*.pkl
+backend/models/*.h5
+backend/models/*.keras
+backend/models/training_report/
+*.pkl
+*.h5
+*.keras
