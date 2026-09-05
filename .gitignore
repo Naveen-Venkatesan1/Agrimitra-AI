@@ -12,7 +12,8 @@ node_modules/
 dist/
 dist-ssr/
 datasets/
-data/
+/data/
+!src/data/
 crop datas/
 
 # Environment Variables
