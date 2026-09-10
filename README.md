@@ -22,7 +22,7 @@ AgriMitra AI is a multilingual AI-powered smart farming platform designed to hel
 
 ---
 
-## 🧠 Core AI Workflow
+## 🧠 Core Workflow
 
 ```text
 FaAgrimitra-AI/
