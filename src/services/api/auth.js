@@ -5,12 +5,16 @@ import {
   loginWithGoogle, 
   resetPassword as sendFirebaseResetPassword, 
   logoutFirebase,
-  onAuthStateChanged
+  onAuthStateChanged,
+  waitForAuthReady
 } from '../../config/firebase';
 
 const DIRECT_USERS_KEY = 'agrimitra_direct_users';
 
 export const authApi = {
+  waitForAuthReady() {
+    return waitForAuthReady();
+  },
   async login({ email, password }) {
     // 1. Check local direct accounts registry
     try {

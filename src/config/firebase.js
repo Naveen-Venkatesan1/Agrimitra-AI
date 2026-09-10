@@ -15,6 +15,8 @@ import {
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
   signInWithEmailLink,
+  browserLocalPersistence,
+  setPersistence,
   RecaptchaVerifier,
   signInWithPhoneNumber
 } from "firebase/auth";
@@ -64,6 +66,28 @@ export const analytics = (typeof window !== 'undefined' && firebaseConfig.measur
 
 // Initialize Firebase Services
 export const auth = getAuth(app);
+
+// Explicitly ensure browser local persistence so authenticated sessions persist across reloads
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn("Firebase setPersistence warning:", err);
+  });
+}
+
+/**
+ * Returns a promise that resolves when Firebase Auth has finished restoring
+ * its session from IndexedDB / local storage persistence.
+ */
+export const waitForAuthReady = async () => {
+  if (auth && typeof auth.authStateReady === 'function') {
+    await Promise.race([
+      auth.authStateReady(),
+      new Promise((resolve) => setTimeout(resolve, 4000))
+    ]);
+  }
+  return auth.currentUser;
+};
+
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();

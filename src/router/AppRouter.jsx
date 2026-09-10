@@ -34,6 +34,15 @@ const PageLoader = () => (
   </div>
 );
 
+const checkIsOnboarded = (user) => {
+  if (!user) return false;
+  return Boolean(
+    user.onboardingCompleted === true ||
+    user.primaryCrop ||
+    (Array.isArray(user.crops) && user.crops.length > 0) ||
+    (user.state && user.district)
+  );
+};
 
 const ProtectedRoute = () => {
   const { isAuthenticated, authLoading, user } = useAppStore();
@@ -52,7 +61,7 @@ const ProtectedRoute = () => {
   }
 
   // Force onboarding if incomplete
-  if (user && !user.onboardingCompleted) {
+  if (user && !checkIsOnboarded(user)) {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -72,7 +81,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={user?.onboardingCompleted ? "/dashboard" : "/onboarding"} replace />;
+    return <Navigate to={checkIsOnboarded(user) ? "/dashboard" : "/onboarding"} replace />;
   }
 
   return children;
@@ -94,7 +103,7 @@ const OnboardingRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user && user.onboardingCompleted) {
+  if (user && checkIsOnboarded(user)) {
     return <Navigate to="/dashboard" replace />;
   }
 

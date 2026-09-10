@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi, profileApi, weatherApi, notificationApi } from '../services/api';
+import { auth } from '../config/firebase';
 import { INDIA_LOCATIONS } from '../data/indiaLocations';
 import { generateFarmIntelligence } from '../services/farmIntelligence';
 import { initSensorAlertListener, configureSensorAlertService } from '../services/sensorAlertService';
@@ -8,24 +9,25 @@ import { getTranslation } from '../i18n';
 
 let weatherAbortController = null;
 
+const getSafeParsedProfile = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('agrimitra_user_profile');
+    if (!raw || raw === 'undefined' || raw === 'null') return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
 export const useAppStore = create(
   persist(
     (set, get) => ({
   // Authentication & User Profile State
   isAuthenticated: typeof window !== 'undefined' ? Boolean(localStorage.getItem('agrimitra_session')) : false,
   authLoading: true,
-  user: typeof window !== 'undefined' && localStorage.getItem('agrimitra_user_profile') ? JSON.parse(localStorage.getItem('agrimitra_user_profile') || 'null') : null,
+  user: getSafeParsedProfile(),
   languageCode: typeof window !== 'undefined' ? (localStorage.getItem('agrimitra_language') || 'en') : 'en',
-  setLanguageCode: (code) => {
-    const validCode = ['ta', 'en', 'te', 'ml', 'hi'].includes(code) ? code : 'en';
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('agrimitra_language', validCode);
-    }
-    set((state) => ({
-      languageCode: validCode,
-      user: state.user ? { ...state.user, languageCode: validCode } : state.user
-    }));
-  },
   loading: false,
   error: null,
   latestDiagnosis: null,
@@ -154,43 +156,45 @@ export const useAppStore = create(
 
   setLanguageCode: async (code) => {
     if (!code) return;
+    const supportedList = ['ta', 'en', 'te', 'ml', 'hi', 'kn', 'mr', 'gu', 'pa', 'bn', 'or', 'as', 'ur', 'kok'];
+    const clean = String(code).trim().toLowerCase().split('-')[0];
+    const validCode = supportedList.includes(clean) ? clean : (supportedList.includes(code) ? code : 'en');
     try {
-      localStorage.setItem('agrimitra_language', code);
+      localStorage.setItem('agrimitra_language', validCode);
     } catch (e) {}
     
     set((state) => ({
-      languageCode: code,
-      user: state.user ? { ...state.user, languageCode: code } : state.user
+      languageCode: validCode,
+      user: state.user ? { ...state.user, languageCode: validCode } : state.user
     }));
 
     const user = get().user;
     if (user?.id) {
-      await profileApi.updateProfile(user.id, { languageCode: code });
+      await profileApi.updateProfile(user.id, { languageCode: validCode });
     }
   },
 
+  _authListenerInitialized: false,
   _profileUnsubscribe: null,
 
   initAuthListener: () => {
-    // Initial restoration from localStorage to prevent flash on reload
+    if (get()._authListenerInitialized) return;
+    set({ _authListenerInitialized: true, authLoading: true });
+
+    // Initial restoration hint from localStorage if session marker exists
     const cachedSession = localStorage.getItem('agrimitra_session');
     if (cachedSession) {
-      const cachedProfile = localStorage.getItem('agrimitra_user_profile');
-      let userData = null;
-      try {
-        userData = cachedProfile ? JSON.parse(cachedProfile) : null;
-      } catch (e) {}
-      set({ 
-        isAuthenticated: true, 
-        user: userData,
-        selectedState: userData?.state || get().selectedState,
-        selectedDistrict: userData?.district || get().selectedDistrict
-      });
-    } else {
-      set({ isAuthenticated: false, user: null });
+      const cachedData = getSafeParsedProfile();
+      if (cachedData) {
+        set({ 
+          isAuthenticated: true, 
+          user: cachedData,
+          selectedState: cachedData.state || get().selectedState,
+          selectedDistrict: cachedData.district || get().selectedDistrict
+        });
+      }
     }
 
-    let isFirstLoad = true;
     authApi.onSessionChange(async (firebaseUser) => {
       const currentUnsubscribe = get()._profileUnsubscribe;
       if (currentUnsubscribe) {
@@ -198,45 +202,127 @@ export const useAppStore = create(
         set({ _profileUnsubscribe: null });
       }
 
-      if (firebaseUser) {
-        // Fetch profile before releasing router to guarantee onboardingCompleted is known
-        const res = await profileApi.getProfile(firebaseUser.uid).catch(() => ({ profile: null }));
-        const profileData = (res && res.profile) || {};
+      // CRITICAL: Await Firebase Auth persistence readiness before deciding session state
+      await authApi.waitForAuthReady().catch(() => {});
+      let activeFirebaseUser = auth?.currentUser || firebaseUser;
 
-        set({ isAuthenticated: true, authLoading: false });
-        localStorage.setItem('agrimitra_session', 'active');
-        
+      // CRITICAL: Explicitly reject anonymous Firebase users - they must NEVER become active application users
+      if (activeFirebaseUser && activeFirebaseUser.isAnonymous) {
+        console.warn('Rejecting anonymous Firebase user during session restoration.');
+        try {
+          const { logoutFirebase } = await import('../config/firebase');
+          await logoutFirebase();
+        } catch (e) {}
+        activeFirebaseUser = null;
+      }
+
+      if (activeFirebaseUser) {
+        const currentUid = activeFirebaseUser.uid;
+
+        // Verify cached profile: ONLY trust if UID matches current authenticated Firebase user
+        const rawCached = getSafeParsedProfile();
+        const isCacheMatching = Boolean(
+          rawCached &&
+          (rawCached.id === currentUid || rawCached.uid === currentUid) &&
+          (!activeFirebaseUser.email || !rawCached.email || rawCached.email.toLowerCase() === activeFirebaseUser.email.toLowerCase())
+        );
+
+        if (!isCacheMatching && rawCached) {
+          // Stale/foreign profile in storage: purge immediately to prevent state pollution
+          localStorage.removeItem('agrimitra_user_profile');
+        }
+
+        const validCached = isCacheMatching ? rawCached : null;
+
+        // Fetch user profile from Firestore using the exact Firebase UID
+        let firestoreProfile = null;
+        try {
+          const res = await profileApi.getProfile(currentUid);
+          if (res && res.profile) {
+            firestoreProfile = res.profile;
+          }
+        } catch (err) {
+          console.warn('Profile fetch during session restoration warning:', err);
+        }
+
+        // Determine correct authMode (preserve google if signed in via Google)
+        const isGoogleUser = Boolean(
+          activeFirebaseUser.providerData?.some((p) => p.providerId === 'google.com') ||
+          validCached?.authMode === 'google'
+        );
+
+        // Base user details from verified Firebase Auth session
         const baseUser = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User',
-          email: firebaseUser.email,
-          avatar: firebaseUser.photoURL || null,
-          state: get().selectedState,
-          district: get().selectedDistrict
+          id: currentUid,
+          uid: currentUid,
+          name: activeFirebaseUser.displayName || validCached?.name || firestoreProfile?.name || (activeFirebaseUser.email ? activeFirebaseUser.email.split('@')[0] : 'Farmer'),
+          email: activeFirebaseUser.email || validCached?.email || firestoreProfile?.email || '',
+          avatar: activeFirebaseUser.photoURL || validCached?.avatar || firestoreProfile?.avatar || null,
+          phone: activeFirebaseUser.phoneNumber || validCached?.phone || firestoreProfile?.phone || '',
+          state: validCached?.state || firestoreProfile?.state || '',
+          district: validCached?.district || firestoreProfile?.district || '',
+          authMode: isGoogleUser ? 'google' : (validCached?.authMode || firestoreProfile?.authMode || 'firebase')
         };
-        
-        set((state) => {
-          const sameUser = state.user?.id === firebaseUser.uid ? state.user : {};
-          const merged = { ...sameUser, ...baseUser, ...profileData };
-          localStorage.setItem('agrimitra_user_profile', JSON.stringify(merged));
-          return { user: merged };
+
+        // Merge: baseUser, verified matching cached data, and Firestore profile
+        const mergedUser = {
+          ...baseUser,
+          ...(validCached || {}),
+          ...(firestoreProfile || {}),
+          id: currentUid,
+          uid: currentUid
+        };
+
+        // Comprehensive onboarding check:
+        // True if onboardingCompleted flag is true, OR user has saved crop/location details
+        const isOnboarded = Boolean(
+          mergedUser.onboardingCompleted === true ||
+          firestoreProfile?.onboardingCompleted === true ||
+          validCached?.onboardingCompleted === true ||
+          mergedUser.primaryCrop ||
+          (Array.isArray(mergedUser.crops) && mergedUser.crops.length > 0) ||
+          (mergedUser.state && mergedUser.district)
+        );
+
+        mergedUser.onboardingCompleted = isOnboarded;
+
+        localStorage.setItem('agrimitra_session', 'active');
+        localStorage.setItem('agrimitra_user_profile', JSON.stringify(mergedUser));
+
+        // ATOMIC STATE UPDATE: Release authLoading only together with verified user & isAuthenticated
+        set({
+          isAuthenticated: true,
+          user: mergedUser,
+          selectedState: mergedUser.state || get().selectedState,
+          selectedDistrict: mergedUser.district || get().selectedDistrict,
+          authLoading: false
         });
-        
+
         get().restoreLatestDiagnosisImage();
-        
-        const unsubscribe = profileApi.subscribeToProfile(firebaseUser.uid, (liveData) => {
+
+        // Subscribe to real-time profile changes
+        const unsubscribe = profileApi.subscribeToProfile(currentUid, (liveData) => {
           if (liveData) {
             set((state) => {
-              const updatedUser = { 
-                ...state.user, 
-                ...liveData, 
-                name: liveData.name || baseUser.name || 'User', 
-                avatar: liveData.avatar || baseUser.avatar,
+              if (state.user && state.user.id !== currentUid) return {};
+              const updatedUser = {
+                ...state.user,
+                ...liveData,
+                id: currentUid,
+                uid: currentUid,
+                name: liveData.name || state.user?.name || baseUser.name,
+                avatar: liveData.avatar || state.user?.avatar || baseUser.avatar,
                 state: liveData.state || state.selectedState,
-                district: liveData.district || state.selectedDistrict
+                district: liveData.district || state.selectedDistrict,
+                onboardingCompleted: Boolean(
+                  state.user?.onboardingCompleted ||
+                  liveData.onboardingCompleted ||
+                  liveData.primaryCrop ||
+                  (liveData.state && liveData.district)
+                )
               };
               localStorage.setItem('agrimitra_user_profile', JSON.stringify(updatedUser));
-              return { 
+              return {
                 user: updatedUser,
                 selectedState: liveData.state || state.selectedState,
                 selectedDistrict: liveData.district || state.selectedDistrict
@@ -244,18 +330,49 @@ export const useAppStore = create(
             });
           }
         });
-        
+
         set({ _profileUnsubscribe: unsubscribe });
       } else {
-        const cached = localStorage.getItem('agrimitra_session');
-        if (!cached) {
-          set({ isAuthenticated: false, user: null });
-        }
-      }
+        // No Firebase user authenticated
+        // Check for local direct account (e.g. usr_direct_...)
+        const rawCached = getSafeParsedProfile();
+        const cachedSession = localStorage.getItem('agrimitra_session');
 
-      if (isFirstLoad) {
-        isFirstLoad = false;
-        set({ authLoading: false });
+        if (cachedSession === 'active' && rawCached && (rawCached.id?.startsWith('usr_direct_') || rawCached.id?.startsWith('usr_demo_'))) {
+          let isDirectValid = false;
+          try {
+            const directUsers = JSON.parse(localStorage.getItem('agrimitra_direct_users') || '[]');
+            isDirectValid = directUsers.some((u) => u.id === rawCached.id);
+          } catch (e) {}
+
+          if (isDirectValid) {
+            const isOnboarded = Boolean(
+              rawCached.onboardingCompleted === true ||
+              rawCached.primaryCrop ||
+              (Array.isArray(rawCached.crops) && rawCached.crops.length > 0) ||
+              (rawCached.state && rawCached.district)
+            );
+            rawCached.onboardingCompleted = isOnboarded;
+
+            set({
+              isAuthenticated: true,
+              user: rawCached,
+              selectedState: rawCached.state || get().selectedState,
+              selectedDistrict: rawCached.district || get().selectedDistrict,
+              authLoading: false
+            });
+            return;
+          }
+        }
+
+        // Neither Firebase nor direct session exists -> confirmed unauthenticated
+        localStorage.removeItem('agrimitra_session');
+        localStorage.removeItem('agrimitra_user_profile');
+        set({
+          isAuthenticated: false,
+          user: null,
+          authLoading: false
+        });
       }
     });
 
@@ -277,7 +394,19 @@ export const useAppStore = create(
     if (isAuth && userData) {
       localStorage.setItem('agrimitra_session', 'active');
       set((state) => {
-        const updatedUser = userData ? { ...userData } : state.user;
+        const uid = userData.id || userData.uid;
+        const isOnboarded = Boolean(
+          userData.onboardingCompleted === true ||
+          userData.primaryCrop ||
+          (Array.isArray(userData.crops) && userData.crops.length > 0) ||
+          (userData.state && userData.district)
+        );
+        const updatedUser = { 
+          ...state.user, 
+          ...userData,
+          ...(uid ? { id: uid, uid: uid } : {}),
+          onboardingCompleted: isOnboarded
+        };
         localStorage.setItem('agrimitra_user_profile', JSON.stringify(updatedUser));
         return {
           isAuthenticated: true,
