@@ -14,7 +14,7 @@ export const profileApi = {
 
         const docSnap = await Promise.race([getDocPromise, timeoutPromise]);
         if (docSnap && typeof docSnap.exists === 'function' && docSnap.exists()) {
-          const profile = docSnap.data();
+          const profile = { id: uid, uid: uid, ...docSnap.data() };
           localStorage.setItem(LOCAL_KEY, JSON.stringify(profile));
           return { success: true, profile };
         }
@@ -56,7 +56,7 @@ export const profileApi = {
     
     return onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        const profile = docSnap.data();
+        const profile = { id: uid, uid: uid, ...docSnap.data() };
         localStorage.setItem(LOCAL_KEY, JSON.stringify(profile));
         callback(profile);
       } else {
@@ -77,6 +77,7 @@ export const profileApi = {
       const updated = {
         ...existing,
         ...profileData,
+        ...(uid ? { id: uid, uid: uid } : {}),
         updatedAt: new Date().toISOString()
       };
 

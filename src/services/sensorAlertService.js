@@ -1,17 +1,14 @@
 let dbModule = null;
-let authModule = null;
 
 const getFirebase = async () => {
   if (!dbModule) {
     dbModule = await import('../config/firebase.js');
-    authModule = await import('firebase/auth');
   }
   return {
     db: dbModule.db,
     doc: dbModule.doc,
     onSnapshot: dbModule.onSnapshot,
-    auth: dbModule.auth,
-    signInAnonymously: authModule.signInAnonymously
+    auth: dbModule.auth
   };
 };
 
@@ -241,15 +238,7 @@ export const initSensorAlertListener = (onDataUpdated = null) => {
 
   const setupListener = async () => {
     try {
-      const { db, doc, onSnapshot, auth, signInAnonymously } = await getFirebase();
-
-      if (auth && !auth.currentUser) {
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          console.warn('Firebase anonymous authentication notice:', e);
-        }
-      }
+      const { db, doc, onSnapshot } = await getFirebase();
 
       if (db) {
         const sensorDocRef = doc(db, 'sensor_readings', 'latest');

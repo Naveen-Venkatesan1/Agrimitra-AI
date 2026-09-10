@@ -14,7 +14,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { db, doc, onSnapshot, auth } from '../../config/firebase';
-import { signInAnonymously } from 'firebase/auth';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../hooks/useTranslation';
 import { formatAppDateTime, parseValidDate } from '../../utils/dateUtils';
@@ -64,14 +63,6 @@ export const AnalyticsHub = () => {
     let unsubscribe = null;
 
     const initRealtimeListener = async () => {
-      if (auth && !auth.currentUser) {
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          console.warn("Firebase anonymous authentication notice:", e);
-        }
-      }
-
       try {
         if (db) {
           const sensorDocRef = doc(db, 'sensor_readings', 'latest');

@@ -9,7 +9,6 @@ import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { acquireLocation, fetchRealWeatherByCoords, getWeatherConditionAsset } from '../services/api/weatherLocationService';
 import { db, doc, onSnapshot, auth } from '../config/firebase';
-import { signInAnonymously } from 'firebase/auth';
 
 /**
  * Weather Icon mapper based on condition keywords
@@ -233,14 +232,6 @@ export const Weather = () => {
     let unsubscribe = null;
 
     const initSensorListener = async () => {
-      if (auth && !auth.currentUser) {
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          console.warn("Firebase anonymous authentication notice:", e);
-        }
-      }
-
       try {
         if (db) {
           const sensorDocRef = doc(db, 'sensor_readings', 'latest');
