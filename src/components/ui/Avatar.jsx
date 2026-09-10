@@ -10,18 +10,20 @@ export const Avatar = ({ user, className = '' }) => {
 
   const getInitials = (name) => {
     if (!name) return 'U';
-    const parts = name.split(' ').filter(Boolean);
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    const strName = typeof name === 'string' ? name : String(name || '');
+    const parts = strName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'U';
+    if (parts.length === 1) return (parts[0].substring(0, 2) || 'U').toUpperCase();
+    return ((parts[0][0] || '') + (parts[parts.length - 1][0] || '')).toUpperCase() || 'U';
   };
 
-  const hasAvatar = user?.avatar && user.avatar.trim() !== '';
+  const hasAvatar = typeof user?.avatar === 'string' && user.avatar.trim() !== '';
 
   if (hasAvatar && !imageError) {
     return (
       <img
         src={user.avatar}
-        alt={user?.name || 'User'}
+        alt={user?.name || user?.displayName || 'User'}
         className={`object-cover ${className}`}
         onError={() => setImageError(true)}
       />
@@ -30,7 +32,7 @@ export const Avatar = ({ user, className = '' }) => {
 
   return (
     <div className={`flex items-center justify-center bg-emerald-600 text-white font-bold tracking-wider ${className}`}>
-      {getInitials(user?.name)}
+      {getInitials(user?.name || user?.displayName)}
     </div>
   );
 };

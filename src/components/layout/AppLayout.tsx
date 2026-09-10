@@ -9,24 +9,32 @@ import { Sprout, RefreshCw } from 'lucide-react';
 interface ErrorBoundaryProps {
   children: ReactNode;
   onReload?: () => void;
+  locationKey?: string;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
+  error?: any;
 }
 
 class AppErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: any): ErrorBoundaryState {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: any, errorInfo: any) {
     console.error("Uncaught render error caught by AppErrorBoundary:", error, errorInfo);
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    if (this.state.hasError && prevProps.locationKey !== this.props.locationKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   render() {
@@ -40,14 +48,12 @@ class AppErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState>
           </p>
           <button
             onClick={() => {
-              this.setState({ hasError: false });
+              this.setState({ hasError: false, error: null });
               if (this.props.onReload) {
                 this.props.onReload();
-              } else {
-                window.location.href = '/dashboard';
               }
             }}
-            className="px-4 py-2 bg-agri-primary text-white text-xs font-bold rounded-xl shadow-sm hover:bg-agri-dark transition flex items-center justify-center gap-2 mx-auto"
+            className="px-4 py-2 bg-agri-primary text-white text-xs font-bold rounded-xl shadow-sm hover:bg-agri-dark transition flex items-center justify-center gap-2 mx-auto cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Reload Dashboard
@@ -124,7 +130,7 @@ export const AppLayout: React.FC = () => {
           style={{ paddingTop: location.pathname === '/dashboard' ? '0' : 'env(safe-area-inset-top, 16px)' }}
         >
           {!isCoreTab && !isAIAssistant && <BackButton />}
-          <AppErrorBoundary onReload={() => setReloadKey(prev => prev + 1)}>
+          <AppErrorBoundary locationKey={location.pathname} onReload={() => setReloadKey(prev => prev + 1)}>
             <Outlet key={reloadKey} />
           </AppErrorBoundary>
         </main>

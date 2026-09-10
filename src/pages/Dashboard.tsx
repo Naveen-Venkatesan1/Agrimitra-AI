@@ -148,53 +148,69 @@ export const Dashboard: React.FC = () => {
      EXISTING DYNAMIC STORE VALUES — PRESERVED
      ============================================================ */
 
-  const currentTemp =
-    weather?.temp ||
-    weather?.temperature ||
-    '29';
+  const currentTemp = (typeof weather?.temp === 'number' || typeof weather?.temp === 'string')
+    ? String(weather.temp)
+    : (typeof weather?.temperature === 'number' || typeof weather?.temperature === 'string')
+      ? String(weather.temperature)
+      : '29';
 
-  const currentCondition =
-    weather?.condition ||
-    weather?.weatherCondition ||
-    'Partly Cloudy';
+  const currentCondition = typeof weather?.condition === 'string'
+    ? weather.condition
+    : (typeof weather?.weatherCondition === 'string'
+      ? weather.weatherCondition
+      : (typeof weather?.condition?.text === 'string'
+        ? weather.condition.text
+        : 'Partly Cloudy'));
 
-  const currentHumidity =
-    weather?.humidity ||
-    '67%';
+  const currentHumidity = (typeof weather?.humidity === 'number' || typeof weather?.humidity === 'string')
+    ? String(weather.humidity)
+    : '67%';
 
-  const currentWind =
-    weather?.windSpeed ||
-    weather?.wind ||
-    '9 km/h';
+  const currentWind = (typeof weather?.windSpeed === 'string' || typeof weather?.windSpeed === 'number')
+    ? String(weather.windSpeed)
+    : (typeof weather?.wind === 'string' || typeof weather?.wind === 'number'
+      ? String(weather.wind)
+      : '9 km/h');
 
-  const displayDistrict =
-    user?.district ||
-    selectedDistrict ||
-    'Chennai';
+  const displayDistrict = typeof user?.district === 'string' && user.district.trim() !== ''
+    ? user.district.trim()
+    : (typeof selectedDistrict === 'string' && selectedDistrict.trim() !== ''
+      ? selectedDistrict.trim()
+      : 'Chennai');
 
-  const displayState =
-    user?.state ||
-    selectedState ||
-    'Tamil Nadu';
+  const displayState = typeof user?.state === 'string' && user.state.trim() !== ''
+    ? user.state.trim()
+    : (typeof selectedState === 'string' && selectedState.trim() !== ''
+      ? selectedState.trim()
+      : 'Tamil Nadu');
 
-  const rawName = (user?.name || user?.displayName || '').trim();
-  const fallbackName = t('default_farmer_name', 'Farmer');
+  const rawName = (
+    typeof user?.name === 'string'
+      ? user.name
+      : (typeof user?.displayName === 'string'
+        ? user.displayName
+        : String(user?.name || user?.displayName || ''))
+  ).trim();
+  const fallbackName = typeof t === 'function' ? (t('default_farmer_name', 'Farmer') || 'Farmer') : 'Farmer';
   const userName = rawName || fallbackName;
 
-  const nameParts = rawName ? rawName.split(/\s+/) : [];
+  const nameParts = rawName ? rawName.split(/\s+/).filter(Boolean) : [];
   const userFirstName = nameParts[0] || fallbackName;
   const userLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
-  const userLandSize =
-    user?.landSize ||
-    '2.5 Acres';
+  const userLandSize = typeof user?.landSize === 'string' || typeof user?.landSize === 'number'
+    ? String(user.landSize)
+    : '2.5 Acres';
 
-  const userPrimaryCrop =
-    user?.primaryCrop ||
-    'Paddy';
+  const userPrimaryCrop = typeof user?.primaryCrop === 'string'
+    ? user.primaryCrop
+    : (Array.isArray(user?.crops) && typeof user?.crops[0] === 'string'
+      ? user.crops[0]
+      : 'Paddy');
 
-  const unreadCount =
-    alerts?.filter((a: any) => a.unread)?.length || 0;
+  const unreadCount = Array.isArray(alerts)
+    ? alerts.filter((a: any) => a && a.unread).length
+    : 0;
 
   const humidityStr =
     String(currentHumidity).includes('%')

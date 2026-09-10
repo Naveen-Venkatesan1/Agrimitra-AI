@@ -18,7 +18,8 @@ export const LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' }
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' }
 ];
 
 export const translations = {

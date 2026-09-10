@@ -40,7 +40,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick, isCoreTab }) => {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = alerts?.filter((a: any) => a.unread)?.length || 0;
+  const unreadCount = Array.isArray(alerts) ? alerts.filter((a: any) => a && a.unread).length : 0;
   const isDashboard = location.pathname === '/dashboard';
 
   useEffect(() => {
@@ -152,13 +152,13 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick, isCoreTab }) => {
               <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="pb-2.5 mb-2 border-b border-gray-100 px-1">
                   <p className="text-[13px] font-bold text-gray-900 truncate capitalize">
-                    {user?.name || user?.displayName || t('default_farmer_name', 'Farmer')}
+                    {typeof user?.name === 'string' ? user.name : (typeof user?.displayName === 'string' ? user.displayName : (typeof t === 'function' ? t('default_farmer_name', 'Farmer') : 'Farmer'))}
                   </p>
                   <p className="text-[11px] text-gray-500 truncate mt-0.5">
                     {user?.email || t('no_email_provided', 'No email provided')}
                   </p>
                   <p className="text-[11px] text-[#0D5C2E] font-semibold truncate mt-1">
-                    Location: {user?.district || selectedDistrict}, {user?.state || selectedState}
+                    Location: {typeof user?.district === 'string' ? user.district : (selectedDistrict || 'Chennai')}, {typeof user?.state === 'string' ? user.state : (selectedState || 'Tamil Nadu')}
                   </p>
                 </div>
 

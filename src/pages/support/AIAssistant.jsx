@@ -251,6 +251,7 @@ export const AIAssistantMain = () => {
   const [lastAiResponse, setLastAiResponse] = useState('');
   const [activeSpeechLang, setActiveSpeechLang] = useState(activeLangCode);
   const [isRecording, setIsRecording] = useState(false);
+  const [typedQuestion, setTypedQuestion] = useState('');
 
   const voiceStateRef = useRef(voiceState);
   voiceStateRef.current = voiceState;
@@ -590,193 +591,189 @@ export const AIAssistantMain = () => {
     }
   }, []);
 
+  // -----------------------------------------------------------------------
+  // playResponseAudioStream
+  // Strategy: fetch Google TTS as a blob URL (avoids CORS + Referer issues),
+  // fall back to Web Speech API if fetch fails or no audio loads.
+  // -----------------------------------------------------------------------
   const playResponseAudioStream = useCallback((text, langCode, onEndCallback) => {
     if (!isMountedRef.current) return;
     const cleanText = text.replace(/[\*#_`~]/g, '').replace(/https?:\/\/\S+/g, '').trim();
-    if (!cleanText) {
-      if (onEndCallback) onEndCallback();
-      return;
-    }
+    if (!cleanText) { if (onEndCallback) onEndCallback(); return; }
 
     const chunks = splitIntoSafeTtsChunks(cleanText, 140);
-    if (!chunks.length) {
-      if (onEndCallback) onEndCallback();
-      return;
-    }
+    if (!chunks.length) { if (onEndCallback) onEndCallback(); return; }
 
+    // Normalize: always use 2-letter code for Google TTS
+    const ttsLang = langCode.split('-')[0].toLowerCase();
+    console.log('[VOICE] playResponseAudioStream lang:', ttsLang, 'chunks:', chunks.length);
     let currentChunkIndex = 0;
 
-    const playNextChunk = () => {
-      if (!isMountedRef.current) return;
-      if (currentChunkIndex >= chunks.length) {
-        if (onEndCallback) onEndCallback();
-        return;
-      }
-
-      const chunkText = chunks[currentChunkIndex++];
-      const encoded = encodeURIComponent(chunkText);
-      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${langCode}&client=tw-ob&q=${encoded}`;
-      const audio = new Audio(audioUrl);
-      activeAudioRef.current = audio;
-
-      let ended = false;
-      const advance = () => {
-        if (ended) return;
-        ended = true;
-        if (activeAudioRef.current === audio) {
-          activeAudioRef.current = null;
+    // --- Web Speech fallback ---
+    const speakViaWebSpeech = (chunkText, onDone) => {
+      if (!('speechSynthesis' in window)) { onDone(); return; }
+      try {
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.cancel();
         }
-        playNextChunk();
-      };
-
-      audio.onplay = () => {
-        if (!isMountedRef.current) {
-          try { audio.pause(); } catch (e) {}
-          return;
-        }
+        const bcp = BCP47_CODE_MAP[ttsLang] || 'en-IN';
+        const u = new SpeechSynthesisUtterance(chunkText);
+        u.lang = bcp;
+        const voice = getBestVoice(bcp);
+        if (voice) { u.voice = voice; u.lang = voice.lang || bcp; }
+        u.rate = 0.95; u.pitch = 1.0; u.volume = 1.0;
+        u.onstart = () => { console.log('[VOICE] Web Speech started, lang:', u.lang); setVoiceState('speaking'); };
+        u.onend = () => { console.log('[VOICE] Web Speech ended'); onDone(); };
+        u.onerror = (e) => { console.warn('[VOICE] Web Speech error:', e?.error); onDone(); };
+        console.log('[VOICE] Web Speech speak(), lang:', bcp, 'voice:', voice?.name || 'system default');
         setVoiceState('speaking');
-      };
-
-      audio.onended = advance;
-      audio.onerror = (e) => {
-        console.warn("Response audio chunk note:", e);
-        advance();
-      };
-
-      setVoiceState('speaking');
-      const p = audio.play();
-      if (p !== undefined) {
-        p.catch((err) => {
-          console.warn("Response audio play note:", err);
-          advance();
-        });
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        console.warn('[VOICE] Web Speech threw:', err);
+        onDone();
       }
     };
 
-    playNextChunk();
-  }, []);
+    // --- Google TTS via fetch-blob (avoids CORS preflight & Referer blocks) ---
+    const playChunkViaGoogleTts = (chunkText, onDone) => {
+      const encoded = encodeURIComponent(chunkText);
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${ttsLang}&client=tw-ob&q=${encoded}`;
+      fetch(url, { method: 'GET', referrerPolicy: 'no-referrer', mode: 'cors' })
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.blob();
+        })
+        .then(blob => {
+          if (!isMountedRef.current) { onDone(); return; }
+          const blobUrl = URL.createObjectURL(blob);
+          const audio = new Audio(blobUrl);
+          activeAudioRef.current = audio;
+          let settled = false;
+          const done = () => {
+            if (settled) return; settled = true;
+            URL.revokeObjectURL(blobUrl);
+            if (activeAudioRef.current === audio) activeAudioRef.current = null;
+            onDone();
+          };
+          audio.onplay = () => { if (isMountedRef.current) { console.log('[VOICE] Google TTS (blob) playing'); setVoiceState('speaking'); } };
+          audio.onended = done;
+          audio.onerror = (e) => { console.warn('[VOICE] Google TTS blob audio error:', e); done(); };
+          setVoiceState('speaking');
+          audio.play().catch(err => {
+            console.warn('[VOICE] Google TTS blob play() blocked:', err.name);
+            done();
+          });
+        })
+        .catch(err => {
+          console.warn('[VOICE] Google TTS fetch failed:', err.message, '- falling back to Web Speech');
+          speakViaWebSpeech(chunkText, onDone);
+        });
+    };
 
+    const playNextChunk = () => {
+      if (!isMountedRef.current) { if (onEndCallback) onEndCallback(); return; }
+      if (currentChunkIndex >= chunks.length) {
+        console.log('[VOICE] All chunks done');
+        if (onEndCallback) onEndCallback();
+        return;
+      }
+      const chunkText = chunks[currentChunkIndex++];
+      playChunkViaGoogleTts(chunkText, playNextChunk);
+    };
+
+    playNextChunk();
+  }, [getBestVoice]);
+
+  // -----------------------------------------------------------------------
+  // playNextInQueue
+  // For English: use Web Speech API (native, reliable)
+  // For Indic (Tamil, Hindi, etc.): use Google TTS via playResponseAudioStream
+  //   because Chrome on Windows has no Tamil/Telugu/Malayalam voices.
+  // -----------------------------------------------------------------------
   const playNextInQueue = useCallback((lang) => {
     if (!isMountedRef.current) return;
     if (isPlayingQueueRef.current) return;
 
     if (speechQueueRef.current.length === 0) {
-      if (!isStreamActiveRef.current) {
-        if (isMountedRef.current) {
-          setVoiceState('ready');
-        }
-        if (autoListenTimeoutRef.current) clearTimeout(autoListenTimeoutRef.current);
-        autoListenTimeoutRef.current = setTimeout(() => {
-          if (isMountedRef.current) {
-            startListening(lang);
-          }
-        }, 100);
-      }
+      isPlayingQueueRef.current = false;
+      if (isMountedRef.current) setVoiceState('ready');
       return;
     }
 
     const nextText = speechQueueRef.current.shift();
-    if (!nextText || !nextText.trim()) {
-      playNextInQueue(lang);
-      return;
-    }
+    if (!nextText || !nextText.trim()) { playNextInQueue(lang); return; }
 
     const cleanText = nextText.replace(/[\*#_`~]/g, '').replace(/https?:\/\/\S+/g, '').trim();
-    if (!cleanText) {
-      playNextInQueue(lang);
-      return;
-    }
+    if (!cleanText) { playNextInQueue(lang); return; }
 
-    // Anchor language strictly to the user's selected language
     const targetLang = getNormalizedLangCode(lang || activeLangCode);
     const bcpCode = BCP47_CODE_MAP[targetLang] || 'en-IN';
-    const langPrefix = targetLang;
     setActiveSpeechLang(bcpCode);
+
+    isPlayingQueueRef.current = true;
+    if (voiceStateRef.current !== 'speaking') setVoiceState('speaking');
 
     const finishUtterance = () => {
       isPlayingQueueRef.current = false;
       activeUtteranceRef.current = null;
       window.__agriActiveUtterance = null;
-      if (isMountedRef.current) {
-        playNextInQueue(lang);
-      }
+      if (isMountedRef.current) playNextInQueue(lang);
     };
 
-    const bestVoice = getBestVoice(bcpCode);
+    console.log('[VOICE] playNextInQueue lang:', targetLang, 'bcp:', bcpCode, 'text length:', cleanText.length);
 
-    // If native voice is missing for non-English and audio stream is available
-    if (!bestVoice && langPrefix !== 'en') {
-      isPlayingQueueRef.current = true;
-      if (voiceStateRef.current !== 'speaking') {
+    // For English: Web Speech API is native and reliable in Chrome
+    if (targetLang === 'en' && 'speechSynthesis' in window) {
+      const bestVoice = getBestVoice(bcpCode);
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = bcpCode;
+      if (bestVoice) { utterance.voice = bestVoice; utterance.lang = bestVoice.lang || bcpCode; }
+      utterance.volume = 1.0; utterance.pitch = 1.0; utterance.rate = 1.0;
+
+      activeUtteranceRef.current = utterance;
+      window.__agriActiveUtterance = utterance;
+
+      const ttsSafetyTimeout = setTimeout(() => {
+        if (isMountedRef.current && isPlayingQueueRef.current) {
+          console.warn('[VOICE] TTS safety timeout fired');
+          finishUtterance();
+        }
+      }, Math.max(12000, cleanText.length * 80));
+
+      utterance.onstart = () => {
+        if (!isMountedRef.current) { try { window.speechSynthesis.cancel(); } catch (e) {} return; }
+        console.log('[VOICE] Web Speech started, voice:', utterance.voice?.name || 'default', 'lang:', utterance.lang);
         setVoiceState('speaking');
+      };
+      utterance.onend = () => { clearTimeout(ttsSafetyTimeout); console.log('[VOICE] Web Speech ended'); finishUtterance(); };
+      utterance.onerror = (e) => {
+        clearTimeout(ttsSafetyTimeout);
+        console.warn('[VOICE] Web Speech error:', e?.error);
+        // If language unavailable, fall through to Google TTS
+        if (e?.error === 'language-unavailable' || e?.error === 'synthesis-failed') {
+          playResponseAudioStream(cleanText, targetLang, finishUtterance);
+        } else {
+          finishUtterance();
+        }
+      };
+
+      if (window.speechSynthesis.paused) { try { window.speechSynthesis.resume(); } catch (_) {} }
+      try {
+        window.speechSynthesis.speak(utterance);
+        console.log('[VOICE] speechSynthesis.speak() called for English');
+      } catch (err) {
+        console.warn('[VOICE] speechSynthesis.speak() threw:', err);
+        clearTimeout(ttsSafetyTimeout);
+        finishUtterance();
       }
-      playResponseAudioStream(cleanText, langPrefix, finishUtterance);
       return;
     }
 
-    if (!('speechSynthesis' in window)) {
-      isPlayingQueueRef.current = true;
-      playResponseAudioStream(cleanText, langPrefix, finishUtterance);
-      return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = bcpCode;
-    if (bestVoice) utterance.voice = bestVoice;
-
-    utterance.volume = 1.0;
-    utterance.pitch = 1.0;
-    utterance.rate = 1.05;
-
-    activeUtteranceRef.current = utterance;
-    window.__agriActiveUtterance = utterance;
-
-    // Safety watchdog timer: prevent queue from permanently locking if onend fails to fire
-    const ttsSafetyTimeout = setTimeout(() => {
-      if (!isMountedRef.current) return;
-      if (isPlayingQueueRef.current) {
-        console.warn("TTS watchdog recovered queue for sentence:", cleanText.substring(0, 30));
-        finishUtterance();
-      }
-    }, Math.max(8000, cleanText.length * 150));
-
-    const handleSpeechEnd = () => {
-      clearTimeout(ttsSafetyTimeout);
-      finishUtterance();
-    };
-
-    utterance.onstart = () => {
-      if (!isMountedRef.current) {
-        try { window.speechSynthesis.cancel(); } catch (e) {}
-        return;
-      }
-      isPlayingQueueRef.current = true;
-      if (voiceStateRef.current !== 'speaking') {
-        setVoiceState('speaking');
-      }
-    };
-
-    utterance.onend = handleSpeechEnd;
-    utterance.onerror = (e) => {
-      clearTimeout(ttsSafetyTimeout);
-      console.warn("TTS utterance note:", e?.error || e);
-      if (isMountedRef.current && (e?.error === 'language-unavailable' || e?.error === 'synthesis-failed')) {
-        playResponseAudioStream(cleanText, langPrefix, finishUtterance);
-      } else {
-        finishUtterance();
-      }
-    };
-
-    isPlayingQueueRef.current = true;
-    if (voiceStateRef.current !== 'speaking') {
-      setVoiceState('speaking');
-    }
-
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-    }
-    window.speechSynthesis.speak(utterance);
-  }, [activeLangCode, getBestVoice, playResponseAudioStream, startListening]);
+    // For Indic languages (Tamil, Hindi, Telugu, etc.): use Google TTS
+    // Chrome on Windows has no native Tamil/Indic voices
+    console.log('[VOICE] Using Google TTS (fetch-blob) for Indic lang:', targetLang);
+    playResponseAudioStream(cleanText, targetLang, finishUtterance);
+  }, [activeLangCode, getBestVoice, playResponseAudioStream]);
 
   const queueSentenceForSpeech = useCallback((sentence, lang, requestId) => {
     if (!isMountedRef.current || activeRequestIdRef.current !== requestId) return;
@@ -1087,7 +1084,6 @@ export const AIAssistantMain = () => {
 
     let responseText = '';
     let success = false;
-    let spokenIndex = 0;
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
@@ -1162,20 +1158,6 @@ export const AIAssistantMain = () => {
                         });
                       }
 
-                      const unstreamed = currentText.substring(spokenIndex);
-                      const sentenceRegex = /([^.!?।|\n]+[.!?।|\n]+)/g;
-                      let match;
-                      let lastMatchedEnd = 0;
-                      while ((match = sentenceRegex.exec(unstreamed)) !== null) {
-                        const sentence = match[0];
-                        if (sentence.trim()) {
-                          queueSentenceForSpeech(sentence.trim(), targetLangCode, currentRequestId);
-                        }
-                        lastMatchedEnd = sentenceRegex.lastIndex;
-                      }
-                      if (lastMatchedEnd > 0) {
-                        spokenIndex += lastMatchedEnd;
-                      }
                     }
                   }
                 } catch (e) {}
@@ -1196,18 +1178,20 @@ export const AIAssistantMain = () => {
             success = true;
             isStreamActiveRef.current = false;
 
-            const remaining = currentText.substring(spokenIndex).trim();
-            if (remaining) {
-              queueSentenceForSpeech(remaining, targetLangCode, currentRequestId);
-            } else if (speechQueueRef.current.length === 0 && !isPlayingQueueRef.current) {
-              setVoiceState('ready');
-              if (autoListenTimeoutRef.current) clearTimeout(autoListenTimeoutRef.current);
-              autoListenTimeoutRef.current = setTimeout(() => {
-                if (isMountedRef.current) {
-                  startListening(targetLangCode);
-                }
-              }, 100);
+            // Speak the FULL final response text once streaming is complete
+            console.log('[VOICE] AI response received, text length:', currentText.length, 'lang:', targetLangCode);
+            // Cancel any partial/interrupted speech from mid-stream
+            if ('speechSynthesis' in window && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+              try { window.speechSynthesis.cancel(); } catch (_) {}
             }
+            if (activeAudioRef.current) {
+              try { activeAudioRef.current.pause(); activeAudioRef.current.src = ''; } catch (_) {}
+              activeAudioRef.current = null;
+            }
+            isPlayingQueueRef.current = false;
+            speechQueueRef.current = [currentText];
+            console.log('[VOICE] Speaking full response now');
+            playNextInQueue(targetLangCode);
           } else {
             // Stream finished without yielding any text
             isStreamActiveRef.current = false;
@@ -1250,7 +1234,7 @@ export const AIAssistantMain = () => {
         });
       }
     }
-  }, [activeLangCode, getSmartContext, queueSentenceForSpeech, startListening, stopAllVoiceOperations, user?.uid]);
+  }, [activeLangCode, getSmartContext, playNextInQueue, stopAllVoiceOperations, user?.uid]);
 
   useEffect(() => {
     window.__farmAiQuery = processFarmerVoiceQuery;
@@ -1420,6 +1404,34 @@ export const AIAssistantMain = () => {
             <span>Stop Conversation</span>
           </button>
         )}
+
+        {/* Text input for typing questions */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = typedQuestion.trim();
+            if (!q || voiceState === 'connecting') return;
+            setTypedQuestion('');
+            processFarmerVoiceQuery(q);
+          }}
+          className="mt-3 w-full max-w-xs flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={typedQuestion}
+            onChange={(e) => setTypedQuestion(e.target.value)}
+            placeholder={activeLangCode === 'ta' ? 'கேள்வி தட்டச்சு செய்யுங்கள்...' : 'Type your question...'}
+            className="flex-1 px-3 py-2 rounded-full bg-black/60 border border-white/20 text-white text-xs placeholder-white/40 focus:outline-none focus:border-emerald-400 backdrop-blur-md"
+            disabled={voiceState === 'connecting'}
+          />
+          <button
+            type="submit"
+            disabled={!typedQuestion.trim() || voiceState === 'connecting'}
+            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold rounded-full transition active:scale-95 cursor-pointer"
+          >
+            Send
+          </button>
+        </form>
 
       </div>
 

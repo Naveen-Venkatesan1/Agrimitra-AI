@@ -469,7 +469,8 @@ export const Login = () => {
 
   return (
     <div
-      className="relative min-h-screen w-full flex flex-col font-sans overflow-x-hidden bg-[#F6FAF5]"
+      className="relative min-h-full w-full flex flex-col font-sans overflow-x-hidden bg-[#F6FAF5] flex-1"
+      style={{ minHeight: '100%' }}
     >
       {/* Background Decor */}
       <div

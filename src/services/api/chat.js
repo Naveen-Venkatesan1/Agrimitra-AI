@@ -2,13 +2,16 @@ import { db, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from
 
 export const chatApi = {
 
-  async sendMessage(prompt, language = 'English', uid = null, contextObj = null, options = {}) {
+  async sendMessage(prompt, language = null, uid = null, contextObj = null, options = {}) {
     try {
       const { onChunk, onSentence, sessionId } = options || {};
       let responseText = '';
       const stateName = contextObj?.state || 'Tamil Nadu';
       const districtName = contextObj?.district || 'Thanjavur';
       const cropName = contextObj?.crop || 'Unknown';
+
+      const storedLang = typeof window !== 'undefined' ? localStorage.getItem('agrimitra_language') : null;
+      const targetLang = language || storedLang || 'English';
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://agrimitra-ai-l207.onrender.com' : 'http://localhost:8000');
       const currentSessionId = sessionId || window.currentChatSessionId || `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -24,7 +27,7 @@ export const chatApi = {
         },
         body: JSON.stringify({
           message: prompt,
-          language: language,
+          language: targetLang,
           session_id: currentSessionId,
           context: {
             state: stateName,

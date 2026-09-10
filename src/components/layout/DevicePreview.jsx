@@ -11,9 +11,22 @@ const DevicePreview = ({ children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (!isDesktop) return;
+    const preventOuterScroll = (e) => {
+      const scrollEl = document.getElementById('mobile-scroll-container');
+      if (scrollEl && scrollEl.contains(e.target)) {
+        return; // Allow scrolling inside mobile phone viewport
+      }
+      e.preventDefault(); // Lock desktop canvas from moving/scrolling
+    };
+    window.addEventListener('wheel', preventOuterScroll, { passive: false });
+    return () => window.removeEventListener('wheel', preventOuterScroll);
+  }, [isDesktop]);
+
   if (!isDesktop) {
     return (
-      <div className="w-full min-h-screen bg-white">
+      <div className="w-full min-h-screen min-h-[100dvh] bg-[#F6FAF5] flex flex-col">
         {children}
       </div>
     );
@@ -31,7 +44,7 @@ const DevicePreview = ({ children }) => {
   const scale = Math.min(1, availableHeight / (height + 30));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-sans overflow-hidden">
+    <div className="fixed inset-0 h-screen w-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-sans overflow-hidden select-none overscroll-none">
       
       {/* Left Control Panel */}
       <div className="flex-shrink-0 w-64 mr-12 flex flex-col h-full justify-center">
@@ -118,7 +131,7 @@ const DevicePreview = ({ children }) => {
 
         {/* Live Application Viewport (Uninterrupted full-screen view) */}
         <div 
-          className="relative bg-white w-full h-full rounded-[1.8rem] overflow-hidden"
+          className="relative bg-[#F6FAF5] w-full h-full rounded-[1.8rem] overflow-hidden"
           style={{
             transform: 'translateZ(0)',
             '--vw': `${width}px`,
@@ -128,7 +141,11 @@ const DevicePreview = ({ children }) => {
            {/* Internal Scrollable Area for the App to render in */}
            <div 
              id="mobile-scroll-container"
-             className="w-full h-full overflow-y-auto overflow-x-hidden relative no-scrollbar"
+             className="w-full h-full overflow-y-auto overflow-x-hidden relative no-scrollbar overscroll-contain"
+             style={{
+               overscrollBehaviorY: 'contain',
+               WebkitOverflowScrolling: 'touch'
+             }}
            >
              {children}
            </div>
